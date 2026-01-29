@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>المحاسب   </title>
+    <title>المحاسب</title>
     <style>
         :root { --main: #1e293b; --accent: #0284c7; --bg: #f8fafc; --white: #ffffff; --danger: #be123c; --success: #059669; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; color: #334155; }
@@ -146,7 +146,7 @@
     const URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
     const FIXED_ACCOUNTS = ["المخزون", "العملاء", "الموردين", "المدينون", "الدائنون"];
-    const ACC_TYPES = ["أصول", "التزامات", "حقوق ملكية", "مبيعات", "تكلفة مبيعات", "مصروفات", "إيرادات", "إيرادات أخرى", "مصروفات اخرى"];
+    const ACC_TYPES = ["أصول", "التزامات", "حقوق ملكية", "مبيعات", "تكلفة مبيعات", "مصروفات", "إيرادات", "إيرادات أخرى", "مصروفات اخرى", "غير ذلك"];
 
     let masterData = { users: {} }; 
     let currentUser = "";
@@ -155,12 +155,11 @@
 
     // دالة حساب المساحة بدقة عالية
     function updateStorageMeter() {
-        const totalSize = JSON.stringify(masterData).length; // الحجم بالبايت
-        const limit = 100 * 1024; // 100 كيلوبايت بالبايت
+        const totalSize = JSON.stringify(masterData).length; 
+        const limit = 100 * 1024; 
         const percent = ((totalSize / limit) * 100).toFixed(2);
         const display = document.getElementById('storageDisplay');
         
-        // شرط العرض: فقط إذا كان المستخدم هو "مايكل ماهر"
         if (currentUser === "مايكل ماهر") {
             display.style.display = "block";
             display.innerText = `: ${percent}%`;
@@ -168,10 +167,9 @@
             display.style.display = "none";
         }
         
-        // تغيير الألوان بناءً على الاستهلاك
-        if (percent > 90) display.style.color = "#fda4af"; // أحمر فاتح
-        else if (percent > 70) display.style.color = "#fbbf24"; // برتقالي
-        else display.style.color = "#34d399"; // أخضر
+        if (percent > 90) display.style.color = "#fda4af"; 
+        else if (percent > 70) display.style.color = "#fbbf24"; 
+        else display.style.color = "#34d399"; 
     }
 
     function switchAuth(mode) {
@@ -284,6 +282,15 @@
         return result;
     }
 
+    // دالة مساعدة لحساب صافي الربح لاستخدامه في التقارير
+    function calculateNetProfit() {
+        let bals = getTrialBalances();
+        let sum = (type) => bals.filter(a => a.type === type).reduce((s, a) => s + Math.abs(a.balance), 0);
+        let mabi = sum('مبيعات'), cost = sum('تكلفة مبيعات'), mojmal = mabi - cost;
+        let otherRev = sum('إيرادات أخرى') + sum('إيرادات'), otherExp = sum('مصروفات اخرى') + sum('مصروفات');
+        return mojmal + otherRev - otherExp;
+    }
+
     function render(id) {
         if(id === 'accountsPage') {
             const b = document.getElementById('accountsBody'); b.innerHTML = '';
@@ -358,6 +365,11 @@
                 if(a.type === 'أصول' && a.balance !== 0) { let val = Math.abs(a.balance); totalA += val; ab.innerHTML += `<tr><td>${a.name}</td><td>${val}</td></tr>`; }
                 if(['التزامات', 'حقوق ملكية'].includes(a.type) && a.balance !== 0) { let val = Math.abs(a.balance); totalL += val; lb.innerHTML += `<tr><td>${a.name}</td><td>${val}</td></tr>`; }
             });
+            // إضافة صافي الربح للميزانية بلون مميز
+            let netProfit = calculateNetProfit();
+            totalL += netProfit;
+            lb.innerHTML += `<tr style="background:#f0fdf4; font-weight:bold; color:var(--success)"><td>صافي الربح / الخسارة</td><td>${netProfit}</td></tr>`;
+            
             ab.innerHTML += `<tr class="total-row"><td>إجمالي الأصول</td><td>${totalA}</td></tr>`;
             lb.innerHTML += `<tr class="total-row"><td>إجمالي الخصوم والملكية</td><td>${totalL}</td></tr>`;
         }
