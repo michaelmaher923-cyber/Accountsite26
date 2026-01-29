@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>المحاسب الذكي - النسخة المؤمنة</title>
+    <title>المحاسب</title>
     <style>
         :root { --main: #1e293b; --accent: #0284c7; --bg: #f8fafc; --white: #ffffff; --danger: #be123c; --success: #059669; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; color: #334155; }
@@ -31,13 +31,16 @@
         .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .total-row { background: #f8fafc; font-weight: bold; }
         .info-box { background: #fffbeb; border-right: 5px solid #f59e0b; padding: 15px; margin-bottom: 15px; text-align: right; border-radius: 4px; }
+        .info-box h4 { margin-top: 0; color: #92400e; }
+        .info-box ul { padding-right: 20px; }
+        .info-box li { margin-bottom: 8px; line-height: 1.6; }
     </style>
 </head>
 <body id="app_body">
 
-<div id="loader"><b>⏳ جاري التحقق من الترخيص والاتصال...</b></div>
+<div id="loader"><b>⏳ جاري الاتصال...</b></div>
 
-<div id="main_content" style="display:none;">
+<div id="guard_overlay" style="display:none;">
     <div id="authScreen" class="auth-box">
         <div class="logo-img" style="margin: 0 auto 20px; width: 60px; height: 60px; font-size: 30px;">📈</div>
         <div class="tabs">
@@ -46,7 +49,7 @@
         </div>
         <input type="text" id="username" placeholder="اسم المستخدم" style="margin-bottom:15px; width:100%;">
         <input type="password" id="password" placeholder="كلمة المرور" style="margin-bottom:5px; width:100%;">
-        <p style="font-size: 11px; color: var(--danger); margin-bottom: 10px;">* كلمة المرور يجب أن لا تقل عن 6 أحرف</p>
+        <p style="font-size: 11px; color: var(--danger); margin-bottom: 10px;">* كلمة المرور يجب أن لا تقل عن 6 أحرف أو أرقام</p>
         <button class="btn btn-save" style="width:100%" onclick="processAuth()">دخول</button>
     </div>
 
@@ -69,40 +72,42 @@
                 <div class="card" onclick="openPage('trialPage')"><h3>⚖️ الميزان</h3></div>
                 <div class="card" onclick="openPage('incomePage')" style="background: #f0fdf4;"><h3>📊 قائمة الدخل</h3></div>
                 <div class="card" onclick="openPage('balanceSheetPage')" style="background: #eff6ff;"><h3>🏦 المركز المالي</h3></div>
-                <div class="card" onclick="openPage('guidePage')" style="background: #fffbeb;"><h3>📖 دليل الاستخدام</h3></div>
+                <div class="card" onclick="openPage('guidePage')" style="background: #fffbeb; border: 1px dashed #f59e0b;"><h3>📖 دليل الاستخدام</h3></div>
             </div>
             <div style="text-align:center; color:#94a3b8; font-size:12px; margin-top:20px;">إعداد : أ مايكل ماهر</div>
+        </div>
+
+        <div id="guidePage" class="page">
+            <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
+            <div class="table-container">
+                <h2 style="text-align: center; color: var(--accent);">📖 الدليل المحاسبي وطريقة الاستخدام</h2>
+                <div class="info-box"><h4>1️⃣ نظام الجرد المستمر</h4><ul><li>البرنامج يعمل بنظام <b>الجرد المستمر</b>.</li><li>عند الشراء: يكون "المخزون" مديناً. عند البيع: يكون "المخزون" دائناً.</li></ul></div>
+                <div class="info-box" style="border-right-color: #059669;"><h4>2️⃣ إدارة المخزن والأصناف</h4><ul><li>رصيد الأصناف يزيد أو ينقص بناءً على قيود حساب <b>(المخزون)</b>.</li><li>يجب اختيار "الصنف" من القائمة المنسدلة في اليومية.</li></ul></div>
+                <div class="info-box" style="border-right-color: #0284c7;"><h4>3️⃣ المتعاملون والديون</h4><ul><li>تتأثر فقط بالقيود التي تشمل حسابات: <b>(العملاء، المدينون، الموردين، الدائنون)</b>.</li><li>اكتب اسم الشخص في خانة "الاسم" في اليومية.</li></ul></div>
+                <div class="info-box" style="border-right-color: #be123c;"><h4>4️⃣ تحذيرات هامة</h4><ul><li><b>لا تقم</b> بتغيير أسماء الحسابات الثابتة.</li><li><b>لا تترك</b> خانة المبلغ فارغة.</li><li>اضغط زر "حفظ البيانات" قبل الخروج.</li></ul></div>
+            </div>
         </div>
 
         <div id="accountsPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><h3>دليل الحسابات</h3><button class="btn btn-add" onclick="addAcc()">+ حساب جديد</button><table><thead><tr><th>اسم الحساب</th><th>النوع</th><th>إجراء</th></tr></thead><tbody id="accountsBody"></tbody></table></div></div>
         <div id="journalPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><button class="btn btn-add" onclick="addJ()">+ قيد جديد</button><table><thead><tr><th>التاريخ</th><th>مدين</th><th>دائن</th><th>الاسم</th><th>الصنف</th><th>الكمية</th><th>المبلغ</th><th>إجراء</th></tr></thead><tbody id="journalBody"></tbody></table></div></div>
         <div id="productsPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><button class="btn btn-add" onclick="addP()">+ صنف جديد</button><table><thead><tr><th>الصنف</th><th>السعر</th><th>رصيد أول</th><th>الرصيد الحالي</th><th>إجراء</th></tr></thead><tbody id="productsBody"></tbody></table></div></div>
-        <div id="partnersPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><h3>دليل المتعاملين والديون</h3><button class="btn btn-add" onclick="addPartnerInfo()">+ إضافة بيانات</button><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>ملاحظات</th><th>مدين (+)</th><th>دائن (-)</th><th>الصافي</th><th>إجراء</th></tr></thead><tbody id="partnersBody"></tbody></table></div></div>
-        <div id="trialPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><h3>ميزان المراجعة</h3><table><thead><tr><th>الحساب</th><th>مدين</th><th>دائن</th><th>رصيد م</th><th>رصيد د</th></tr></thead><tbody id="trialBody"></tbody></table></div></div>
-        <div id="incomePage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><h2>📊 قائمة الدخل</h2><table><tbody id="incomeBody"></tbody></table></div></div>
+        <div id="partnersPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><h3>دليل المتعاملين والديون</h3><button class="btn btn-add" onclick="addPartnerInfo()">+ إضافة بيانات متعامل</button><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>ملاحظات</th><th>مدين (+)</th><th>دائن (-)</th><th>الصافي</th><th>إجراء</th></tr></thead><tbody id="partnersBody"></tbody></table></div></div>
+        <div id="trialPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><table><thead><tr><th>الحساب</th><th>مدين</th><th>دائن</th><th>رصيد م</th><th>رصيد د</th></tr></thead><tbody id="trialBody"></tbody></table></div></div>
+        <div id="incomePage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><h2 style="text-align: center;">📊 قائمة الدخل</h2><table><tbody id="incomeBody"></tbody></table></div></div>
         <div id="balanceSheetPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="report-grid"><div class="table-container"><h3>الأصول</h3><table><thead><tr><th>الحساب</th><th>المبلغ</th></tr></thead><tbody id="assetsBody"></tbody></table></div><div class="table-container"><h3>الالتزامات وحقوق الملكية</h3><table><thead><tr><th>الحساب</th><th>المبلغ</th></tr></thead><tbody id="liabilitiesBody"></tbody></table></div></div></div>
-        <div id="guidePage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><h2>📖 الدليل</h2><div class="info-box">نظام الجرد المستمر وحماية البيانات - أ/ مايكل ماهر</div></div></div>
     </div>
 </div>
 
-<datalist id="accList"></datalist>
-<datalist id="partnerList"></datalist>
+<datalist id="accList"></datalist><datalist id="partnerList"></datalist>
 
 <script>
     (function() {
-        // تشفير النطاق لمنع البحث اليدوي: michaelmaher923.github.io
-        const _authD = ["\x6d\x69\x63\x68\x61\x65\x6c\x6d\x61\x68\x65\x72\x39\x32\x33\x2e\x67\x69\x74\x68\x75\x62\x2e\x69\x6f"];
-        const _curD = window.location.hostname;
-
-        if (_curD === _authD[0] || _curD.includes("michaelmaher923")) {
-            document.getElementById('main_content').style.display = 'block';
+        const _k = ["\x6d\x69\x63\x68\x61\x65\x6c\x6d\x61\x68\x65\x72\x39\x32\x33\x2e\x67\x69\x74\x68\x75\x62\x2e\x69\x6f"];
+        if (window.location.hostname === _k[0] || window.location.hostname.includes("michaelmaher923")) {
+            document.getElementById('guard_overlay').style.display = 'block';
             document.getElementById('loader').style.display = 'none';
         } else {
-            document.getElementById('app_body').innerHTML = `
-                <div style="background:#0f172a; color:#f8fafc; height:100vh; display:flex; align-items:center; justify-content:center; text-align:center; flex-direction:column; font-family:sans-serif;">
-                    <h1 style="color:#be123c;">🛑 حظر الحماية</h1>
-                    <p>هذا الكود مرخص فقط للأستاذ مايكل ماهر على نطاقه الخاص.</p>
-                </div>`;
+            document.body.innerHTML = '<div style="background:#000;color:red;height:100vh;display:flex;align-items:center;justify-content:center;font-family:sans-serif;"><h1>Forbidden Access - Unauthorized Domain</h1></div>';
             window.stop();
         }
     })();
@@ -131,13 +136,13 @@
         const u = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value.trim();
         const isLogin = document.getElementById('loginTab').classList.contains('active');
-        if(!u || !p || p.length < 6) return alert("تأكد من البيانات (كلمة المرور 6 خانات)");
+        if(!u || !p || p.length < 6) return alert("أكمل البيانات (كلمة المرور 6 خانات)");
         document.getElementById('loader').style.display = 'flex';
         const email = u.toLowerCase().replace(/[^a-z0-9]/g, "") + "@maher.com";
         try {
             if (isLogin) await signInWithEmailAndPassword(auth, email, p);
             else await createUserWithEmailAndPassword(auth, email, p);
-        } catch (e) { alert("خطأ في الدخول"); document.getElementById('loader').style.display = 'none'; }
+        } catch (e) { alert("خطأ في البيانات"); document.getElementById('loader').style.display = 'none'; }
     };
 
     onAuthStateChanged(auth, async (user) => {
@@ -158,13 +163,21 @@
         document.getElementById('loader').style.display = 'none';
     };
 
-    window.logout = () => signOut(auth).then(() => location.reload());
+    window.logout = () => { signOut(auth).then(() => location.reload()); };
+</script>
 
-    // المنطق المحاسبي
+<script>
     const FIXED_ACCOUNTS = ["المخزون", "العملاء", "الموردين", "المدينون", "الدائنون"];
     const ACC_TYPES = ["أصول", "التزامات", "حقوق ملكية", "مبيعات", "تكلفة مبيعات", "مصروفات", "إيرادات", "إيرادات أخرى", "مصروفات اخرى", "غير ذلك"];
 
-    window.initFixedAccounts = () => {
+    window.userDB = { accounts: [], journal: [], products: [], partnersInfo: [] };
+
+    function switchAuth(mode) {
+        document.getElementById('loginTab').classList.toggle('active', mode);
+        document.getElementById('registerTab').classList.toggle('active', !mode);
+    }
+
+    function initFixedAccounts() {
         if(!userDB.accounts) userDB.accounts = [];
         FIXED_ACCOUNTS.forEach(n => {
             if(!userDB.accounts.find(a => a.name === n)) {
@@ -174,7 +187,7 @@
         });
     }
 
-    window.startApp = () => {
+    function startApp() {
         document.getElementById('authScreen').style.display = 'none';
         document.getElementById('appScreen').style.display = 'block';
         document.getElementById('loader').style.display = 'none';
@@ -182,42 +195,42 @@
         updateDatalists(); openPage('homePage');
     }
 
-    window.openPage = (id) => {
+    function openPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         render(id);
     }
 
-    window.updateDatalists = () => {
+    function updateDatalists() {
         const dl = document.getElementById('accList'); dl.innerHTML = '';
         userDB.accounts.forEach(a => { if(a.name) dl.innerHTML += `<option value="${a.name}">`; });
         const pl = document.getElementById('partnerList'); pl.innerHTML = '';
         userDB.partnersInfo.forEach(p => { if(p.name) pl.innerHTML += `<option value="${p.name}">`; });
     }
 
-    window.getTrialBalances = () => {
+    function getTrialBalances() {
         let accs = {};
         userDB.accounts.forEach(a => { if(a.name) accs[a.name] = { d: 0, c: 0, type: a.type }; });
         userDB.journal.forEach(j => {
             if(accs[j.deb]) accs[j.deb].d += parseFloat(j.v) || 0;
             if(accs[j.cre]) accs[j.cre].c += parseFloat(j.v) || 0;
         });
-        let res = [];
+        let result = [];
         for(let n in accs) {
-            let b = accs[n].d - accs[n].c;
-            res.push({ name: n, type: accs[n].type, balance: b, d: accs[n].d, c: accs[n].c });
+            let bal = accs[n].d - accs[n].c;
+            result.push({ name: n, type: accs[n].type, balance: bal, d: accs[n].d, c: accs[n].c });
         }
-        return res;
+        return result;
     }
 
-    window.calculateNetProfit = () => {
+    function calculateNetProfit() {
         let bals = getTrialBalances();
         let sum = (t) => bals.filter(a => a.type === t).reduce((s, a) => s + Math.abs(a.balance), 0);
         let mojmal = sum('مبيعات') - sum('تكلفة مبيعات');
         return mojmal + (sum('إيرادات أخرى') + sum('إيرادات')) - (sum('مصروفات اخرى') + sum('مصروفات'));
     }
 
-    window.render = (id) => {
+    function render(id) {
         if(id === 'accountsPage') {
             const b = document.getElementById('accountsBody'); b.innerHTML = '';
             userDB.accounts.forEach((a, i) => {
@@ -236,7 +249,7 @@
             const b = document.getElementById('partnersBody'); b.innerHTML = '';
             let calc = {};
             userDB.journal.forEach(j => { if(j.name) { let n = j.name.trim(); if(!calc[n]) calc[n]={d:0,c:0}; let v = parseFloat(j.v)||0; if(FIXED_ACCOUNTS.includes(j.deb)) calc[n].d+=v; if(FIXED_ACCOUNTS.includes(j.cre)) calc[n].c+=v; }});
-            userDB.partnersInfo.forEach((p, i) => { let d=calc[p.name]?.d||0, c=calc[p.name]?.c||0, net=d-c; b.innerHTML += `<tr><td><input value="${p.name}" onchange="userDB.partnersInfo[${i}].name=this.value;updateDatalists()"></td><td><input value="${p.phone||''}"></td><td><input value="${p.note||''}"></td><td style="color:blue">${d}</td><td style="color:orange">${c}</td><td style="font-weight:bold; color:${net>=0?'green':'red'}">${net}</td><td><button class="btn btn-del" onclick="userDB.partnersInfo.splice(${i},1);render('partnersPage')">🗑️</button></td></tr>`; });
+            userDB.partnersInfo.forEach((p, i) => { let d=calc[p.name]?.d||0, c=calc[p.name]?.c||0, net=d-c; b.innerHTML += `<tr><td><input value="${p.name}" onchange="userDB.partnersInfo[${i}].name=this.value;updateDatalists()"></td><td><input value="${p.phone||''}" onchange="userDB.partnersInfo[${i}].phone=this.value"></td><td><input value="${p.note||''}" onchange="userDB.partnersInfo[${i}].note=this.value"></td><td style="color:blue">${d}</td><td style="color:orange">${c}</td><td style="font-weight:bold; color:${net>=0?'green':'red'}">${net}</td><td><button class="btn btn-del" onclick="userDB.partnersInfo.splice(${i},1);render('partnersPage')">🗑️</button></td></tr>`; });
         }
         if(id === 'trialPage') {
             const b = document.getElementById('trialBody'); b.innerHTML = '';
@@ -246,8 +259,9 @@
             const b = document.getElementById('incomeBody'); b.innerHTML = '';
             let bals = getTrialBalances();
             let sum = (t) => bals.filter(a => a.type === t).reduce((s, a) => s + Math.abs(a.balance), 0);
-            let mabi = sum('مبيعات'), cost = sum('تكلفة مبيعات'), net = calculateNetProfit();
-            b.innerHTML = `<tr><td>إجمالي المبيعات</td><td>${mabi}</td></tr><tr><td>(-) تكلفة البضاعة</td><td>${cost}</td></tr><tr><td>(+) إيرادات أخرى</td><td>${sum('إيرادات أخرى')+sum('إيرادات')}</td></tr><tr><td>(-) مصروفات</td><td>${sum('مصروفات اخرى')+sum('مصروفات')}</td></tr><tr class="total-row" style="background:#dcfce7"><td>صافي الربح</td><td>${net}</td></tr>`;
+            let mabi = sum('مبيعات'), cost = sum('تكلفة مبيعات'), mojmal = mabi - cost;
+            let net = mojmal + (sum('إيرادات أخرى') + sum('إيرادات')) - (sum('مصروفات اخرى') + sum('مصروفات'));
+            b.innerHTML = `<tr><td>إجمالي المبيعات</td><td>${mabi}</td></tr><tr><td>(-) تكلفة البضاعة</td><td>${cost}</td></tr><tr class="total-row"><td>مجمل الربح</td><td>${mojmal}</td></tr><tr><td>(+) إيرادات أخرى</td><td>${sum('إيرادات أخرى')+sum('إيرادات')}</td></tr><tr><td>(-) مصروفات</td><td>${sum('مصروفات اخرى')+sum('مصروفات')}</td></tr><tr class="total-row" style="background:#dcfce7"><td>صافي الربح</td><td>${net}</td></tr>`;
         }
         if(id === 'balanceSheetPage') {
             let bals = getTrialBalances(), ab = document.getElementById('assetsBody'), lb = document.getElementById('liabilitiesBody');
@@ -257,8 +271,9 @@
                 if(['التزامات', 'حقوق ملكية'].includes(a.type)) { let val = a.balance < 0 ? Math.abs(a.balance) : a.c; tL += val; lb.innerHTML += `<tr><td>${a.name}</td><td>${val}</td></tr>`; }
             });
             let net = calculateNetProfit(); tL += net;
-            lb.innerHTML += `<tr style="background:#f0fdf4; font-weight:bold;"><td>صافي الربح</td><td>${net}</td></tr><tr class="total-row"><td>الإجمالي</td><td>${tA}</td></tr>`;
-            document.querySelector('#liabilitiesBody').parentElement.innerHTML += `<tr class="total-row"><td>إجمالي الخصوم</td><td>${tL}</td></tr>`;
+            lb.innerHTML += `<tr style="background:#f0fdf4; font-weight:bold; color:var(--success)"><td>صافي الربح</td><td>${net}</td></tr>`;
+            ab.innerHTML += `<tr class="total-row"><td>الإجمالي</td><td>${tA}</td></tr>`;
+            lb.innerHTML += `<tr class="total-row"><td>الإجمالي</td><td>${tL}</td></tr>`;
         }
         if(id === 'productsPage') {
             const b = document.getElementById('productsBody'); b.innerHTML = '';
@@ -270,28 +285,32 @@
         }
     }
 
-    window.validateStock = (i) => {
+    function validateStock(i) {
         let j = userDB.journal[i];
         if(j.cre === "المخزون" && j.prod) {
             let product = userDB.products.find(p => p.name === j.prod), cur = parseFloat(product.op)||0;
             userDB.journal.forEach((jj, idx) => { if(idx !== i && jj.prod === j.prod) { if(jj.deb === "المخزون") cur += parseFloat(jj.q)||0; if(jj.cre === "المخزون") cur -= parseFloat(jj.q)||0; }});
             if(parseFloat(document.getElementById('q'+i).value) > cur) { alert("المتاح: " + cur); document.getElementById('q'+i).value = 0; }
         }
-        updateRowPrice(i, j.prod);
+        calcRowVal(i);
     }
 
-    window.updateRowPrice = (i, pName) => {
-        const prod = userDB.products.find(p => p.name === pName);
+    function updateRowPrice(i, pName) {
+        const product = userDB.products.find(p => p.name === pName);
         userDB.journal[i].prod = pName;
-        userDB.journal[i].q = document.getElementById('q'+i).value;
-        if(prod) { let val = (parseFloat(prod.price) || 0) * (parseFloat(userDB.journal[i].q) || 0); document.getElementById('v'+i).value = val; userDB.journal[i].v = val; }
+        if(product) { document.getElementById('v'+i).value = (parseFloat(product.price) || 0) * (parseFloat(document.getElementById('q'+i).value) || 0); userDB.journal[i].v = document.getElementById('v'+i).value; }
     }
 
-    window.addAcc = () => { userDB.accounts.push({name:'', type:'أصول', fixed: false}); render('accountsPage'); }
-    window.addJ = () => { userDB.journal.push({date: new Date().toISOString().split('T')[0], q:0, v:0, deb:'', cre:'', name:'', prod:''}); render('journalPage'); }
-    window.addP = () => { userDB.products.push({name:'', price:0, op:0}); render('productsPage'); }
-    window.addPartnerInfo = () => { userDB.partnersInfo.push({name:'', phone:'', note:''}); render('partnersPage'); }
-    window.switchAuth = (m) => { document.getElementById('loginTab').classList.toggle('active', m); document.getElementById('registerTab').classList.toggle('active', !m); }
+    function calcRowVal(i) {
+        userDB.journal[i].q = document.getElementById('q'+i).value;
+        const product = userDB.products.find(p => p.name === userDB.journal[i].prod);
+        if(product) { document.getElementById('v'+i).value = (parseFloat(product.price) || 0) * (parseFloat(userDB.journal[i].q) || 0); userDB.journal[i].v = document.getElementById('v'+i).value; }
+    }
+
+    function addAcc() { userDB.accounts.push({name:'', type:'أصول', fixed: false}); render('accountsPage'); }
+    function addJ() { userDB.journal.push({date: new Date().toISOString().split('T')[0], q:0, v:0, deb:'', cre:'', name:'', prod:''}); render('journalPage'); }
+    function addP() { userDB.products.push({name:'', price:0, op:0}); render('productsPage'); }
+    function addPartnerInfo() { userDB.partnersInfo.push({name:'', phone:'', note:''}); render('partnersPage'); }
 </script>
 </body>
 </html>
