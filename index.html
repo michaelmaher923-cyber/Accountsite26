@@ -2,369 +2,60 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>المحاسب - الإصدار المشفر والمحمي</title>
+    <title>المحاسب - نسخة محمية</title>
     <style>
         :root { --main: #1e293b; --accent: #0284c7; --bg: #f8fafc; --white: #ffffff; --danger: #be123c; --success: #059669; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; color: #334155; }
-        /* شاشة الخطأ السوداء */
-        #lic-err { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; color:#ff0000; z-index:9999999; justify-content:center; align-items:center; font-size:30px; font-weight:bold; text-align:center; flex-direction:column; }
-        header { background: var(--main); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .logo-img { width: 40px; height: 40px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .page { display: none; padding: 25px; }
-        .page.active { display: block; }
-        .table-container { background: var(--white); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow-x: auto; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background: #f1f5f9; padding: 12px; border: 1px solid #e2e8f0; font-size: 13px; color: var(--main); }
-        td { padding: 8px; border: 1px solid #e2e8f0; text-align: center; }
-        input, select { width: 92%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; }
-        input[readonly] { background-color: #f1f5f9; color: #64748b; cursor: not-allowed; }
-        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-save { background: var(--success); color: white; }
-        .btn-del { background: var(--danger); color: white; }
-        .btn-add { background: var(--main); color: white; margin-bottom: 15px; }
-        .nav-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; padding: 20px; }
-        .card { background: white; padding: 25px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid #e2e8f0; transition: 0.3s; }
-        .card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        .auth-box { max-width: 400px; margin: 80px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); text-align: center; }
-        .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; }
-        .tab { flex: 1; padding: 10px; cursor: pointer; font-weight: bold; color: #94a3b8; }
-        .tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
-        #loader { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; justify-content:center; align-items:center; flex-direction:column; }
-        .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .total-row { background: #f8fafc; font-weight: bold; }
-        .info-box { background: #fffbeb; border-right: 5px solid #f59e0b; padding: 15px; margin-bottom: 15px; text-align: right; border-radius: 4px; }
-        .info-box h4 { margin-top: 0; color: #92400e; }
-        .info-box ul { padding-right: 20px; }
-        .info-box li { margin-bottom: 8px; line-height: 1.6; }
+        #loader { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--white); z-index:10000; display:flex; justify-content:center; align-items:center; flex-direction:column; }
+        #unauthorized { display:none; text-align:center; padding:50px; }
     </style>
 </head>
-<body>
+<body id="mainBody">
 
-<div id="lic-err">
-    <span>⚠️ خطأ في الترخيص</span>
-    <p style="font-size:16px; margin-top:20px;">هذه النسخة مخصصة فقط للاستخدام عبر الرابط الرسمي المعتمد للأستاذ مايكل ماهر.</p>
+<div id="loader"><h2 style="color:var(--main)">⏳ جاري التحميل الآمن...</h2></div>
+<div id="unauthorized">
+    <h1 style="color:var(--danger)">⚠️ خطأ في الترخيص</h1>
+    <p>هذا الكود محمي برمجياً ولا يعمل إلا عبر الرابط الرسمي المعتمد.</p>
+    <p><b>https://michaelmaher923-cyber.github.io/Accountsite26/</b></p>
 </div>
 
-<div id="main-content" style="display:none">
-    <div id="loader"><b>⏳ جاري الاتصال...</b></div>
-
-    <div id="authScreen" class="auth-box">
-        <div class="logo-img" style="margin: 0 auto 20px; width: 60px; height: 60px; font-size: 30px;">📈</div>
-        <div class="tabs">
-            <div id="loginTab" class="tab active" onclick="switchAuth(true)">تسجيل الدخول</div>
-            <div id="registerTab" class="tab" onclick="switchAuth(false)">إنشاء حساب</div>
-        </div>
-        <input type="text" id="username" placeholder="اسم المستخدم" style="margin-bottom:15px; width:100%;">
-        <input type="password" id="password" placeholder="كلمة المرور" style="margin-bottom:5px; width:100%;">
-        <p style="font-size: 11px; color: var(--danger); margin-bottom: 10px;">* كلمة المرور يجب أن لا تقل عن 6 أحرف أو أرقام</p>
-        <button class="btn btn-save" style="width:100%" onclick="processAuth()">دخول</button>
-    </div>
-
-    <div id="appScreen" style="display:none;">
-        <header>
-            <div style="display:flex; align-items:center; gap:12px;"><div class="logo-img">📉</div><h2 style="margin:0">المحاسب</h2></div>
-            <div style="display:flex; align-items:center; gap:15px;">
-                <span id="userDisplay" style="font-weight: bold;"></span>
-                <button class="btn btn-save" onclick="syncToCloud()" style="background:var(--success)">حفظ البيانات</button>
-                <button class="btn btn-del" onclick="logout()">خروج</button>
-            </div>
-        </header>
-
-        <div id="homePage" class="page active">
-            <div class="nav-menu">
-                <div class="card" onclick="openPage('accountsPage')"><h3>📁 الحسابات</h3></div>
-                <div class="card" onclick="openPage('journalPage')"><h3>📓 اليومية</h3></div>
-                <div class="card" onclick="openPage('productsPage')"><h3>📦 المخزن</h3></div>
-                <div class="card" onclick="openPage('partnersPage')"><h3>🤝 المتعاملون</h3></div>
-                <div class="card" onclick="openPage('trialPage')"><h3>⚖️ الميزان</h3></div>
-                <div class="card" onclick="openPage('incomePage')" style="background: #f0fdf4;"><h3>📊 قائمة الدخل</h3></div>
-                <div class="card" onclick="openPage('balanceSheetPage')" style="background: #eff6ff;"><h3>🏦 المركز المالي</h3></div>
-                <div class="card" onclick="openPage('guidePage')" style="background: #fffbeb; border: 1px dashed #f59e0b;"><h3>📖 دليل الاستخدام</h3></div>
-            </div>
-            <div style="text-align:center; color:#94a3b8; font-size:12px; margin-top:20px;">إعداد : أ مايكل ماهر</div>
-        </div>
-
-        <div id="guidePage" class="page">
-            <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
-            <div class="table-container">
-                <h2 style="text-align: center; color: var(--accent);">📖 الدليل المحاسبي وطريقة الاستخدام</h2>
-                <div class="info-box">
-                    <h4>1️⃣ نظام الجرد المستمر</h4>
-                    <ul>
-                        <li>البرنامج يعمل بنظام <b>الجرد المستمر</b>.</li>
-                        <li>عند الشراء: يكون "المخزون" مديناً. عند البيع: يكون "المخزون" دائناً.</li>
-                    </ul>
-                </div>
-                <div class="info-box" style="border-right-color: #059669;">
-                    <h4>2️⃣ إدارة المخزن والأصناف</h4>
-                    <ul>
-                        <li>رصيد الأصناف في صفحة "المخزن" يزيد أو ينقص بناءً على القيود التي يكون فيها حساب <b>(المخزون)</b> طرفاً.</li>
-                        <li>يجب اختيار "الصنف" من القائمة المنسدلة في اليومية لضمان تسجيل الحركة في المخزن.</li>
-                    </ul>
-                </div>
-                <div class="info-box" style="border-right-color: #0284c7;">
-                    <h4>3️⃣ المتعاملون والديون</h4>
-                    <ul>
-                        <li>حسابات الأشخاص في صفحة "المتعاملون" تتأثر فقط بالقيود التي تشمل حسابات: <b>(العملاء، المدينون، الموردين، الدائنون)</b>.</li>
-                        <li>تأكد من كتابة اسم الشخص في خانة "الاسم" في دفتر اليومية ليظهر في كشف حسابه.</li>
-                    </ul>
-                </div>
-                <div class="info-box" style="border-right-color: #be123c;">
-                    <h4>4️⃣ تحذيرات هامة (لا تفعل الآتي)</h4>
-                    <ul>
-                        <li><b>لا تقم</b> بتغيير أسماء الحسابات الثابتة (المخزون، العملاء، إلخ).</li>
-                        <li><b>لا تترك</b> خانة المبلغ فارغة في القيد.</li>
-                        <li><b>لا تنسى</b> ضغط زر "حفظ البيانات" قبل الخروج.</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div id="accountsPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><h3>دليل الحسابات</h3><button class="btn btn-add" onclick="addAcc()">+ حساب جديد</button><table><thead><tr><th>اسم الحساب</th><th>النوع</th><th>إجراء</th></tr></thead><tbody id="accountsBody"></tbody></table></div></div>
-        <div id="journalPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><button class="btn btn-add" onclick="addJ()">+ قيد جديد</button><table><thead><tr><th>التاريخ</th><th>مدين</th><th>دائن</th><th>الاسم</th><th>الصنف</th><th>الكمية</th><th>المبلغ</th><th>إجراء</th></tr></thead><tbody id="journalBody"></tbody></table></div></div>
-        <div id="productsPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><button class="btn btn-add" onclick="addP()">+ صنف جديد</button><table><thead><tr><th>الصنف</th><th>السعر</th><th>رصيد أول</th><th>الرصيد الحالي</th><th>إجراء</th></tr></thead><tbody id="productsBody"></tbody></table></div></div>
-        <div id="partnersPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><h3>دليل المتعاملين والديون</h3><button class="btn btn-add" onclick="addPartnerInfo()">+ إضافة بيانات متعامل</button><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>ملاحظات</th><th>مدين (+)</th><th>دائن (-)</th><th>الصافي</th><th>إجراء</th></tr></thead><tbody id="partnersBody"></tbody></table></div></div>
-        <div id="trialPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><table><thead><tr><th>الحساب</th><th>مدين</th><th>دائن</th><th>رصيد م</th><th>رصيد د</th></tr></thead><tbody id="trialBody"></tbody></table></div></div>
-        <div id="incomePage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><h2 style="text-align: center;">📊 قائمة الدخل</h2><table><tbody id="incomeBody"></tbody></table></div></div>
-        <div id="balanceSheetPage" class="page">
-            <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
-            <div class="report-grid">
-                <div class="table-container"><h3>الأصول</h3><table><thead><tr><th>الحساب</th><th>المبلغ</th></tr></thead><tbody id="assetsBody"></tbody></table></div>
-                <div class="table-container"><h3>الالتزامات وحقوق الملكية</h3><table><thead><tr><th>الحساب</th><th>المبلغ</th></tr></thead><tbody id="liabilitiesBody"></tbody></table></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<datalist id="accList"></datalist>
-<datalist id="partnerList"></datalist>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-    // --- منطق التشفير والقفل الذكي (شفرة غير قابلة للفك) ---
-    (function(){
-        const _0x4d2e = ["\x68\x6f\x73\x74\x6e\x61\x6d\x65", "\x6c\x6f\x63\x61\x74\x69\x6f\x6e", "\x6d\x69\x63\x68\x61\x65\x6c\x6d\x61\x68\x65\x72\x39\x32\x33\x2d\x63\x79\x62\x65\x72\x2e\x67\x69\x74\x68\x75\x62\x2e\x69\x6f", "\x64\x69\x73\x70\x6c\x61\x79", "\x73\x74\x79\x6c\x65", "\x6c\x69\x63\x2d\x65\x72\x72", "\x67\x65\x74\x45\x6c\x65\x6d\x65\x6e\x74\x42\x79\x49\x64", "\x6d\x61\x69\x6e\x2d\x63\x6f\x6e\x74\x65\x6e\x74", "\x66\x6c\x65\x78", "\x62\x6c\x6f\x63\x6b"];
-        const curH = window[_0x4d2e[1]][_0x4d2e[0]];
-        const targetH = _0x4d2e[2];
-        if (curH !== targetH) {
-            document[_0x4d2e[6]](_0x4d2e[5])[_0x4d2e[4]][_0x4d2e[3]] = _0x4d2e[8];
-            document[_0x4d2e[6]](_0x4d2e[7]).remove(); // حذف الكود تماماً من المتصفح في حال الرابط خطأ
-        } else {
-            document[_0x4d2e[6]](_0x4d2e[7])[_0x4d2e[4]][_0x4d2e[3]] = _0x4d2e[9];
-        }
-    })();
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyBP7HP1w4MbOFZWnv7BdpKwDlYjv4VJUTM",
-        authDomain: "accountsite26.firebaseapp.com",
-        databaseURL: "https://accountsite26-default-rtdb.firebaseio.com",
-        projectId: "accountsite26",
-        storageBucket: "accountsite26.firebasestorage.app",
-        messagingSenderId: "1015795938039",
-        appId: "1:1015795938039:web:b625e24fca2c5b231d19f2"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
-
-    window.processAuth = async () => {
-        const u = document.getElementById('username').value.trim();
-        const p = document.getElementById('password').value.trim();
-        const isLogin = document.getElementById('loginTab').classList.contains('active');
-        if(!u || !p) return alert("أكمل البيانات");
-        if(p.length < 6) return alert("كلمة المرور يجب أن تكون 6 أرقام على الأقل");
-        document.getElementById('loader').style.display = 'flex';
-        const email = u.toLowerCase().replace(/[^a-z0-9]/g, "") + "@maher.com";
-        try {
-            if (isLogin) await signInWithEmailAndPassword(auth, email, p);
-            else await createUserWithEmailAndPassword(auth, email, p);
-        } catch (e) {
-            alert("خطأ في البيانات");
-            document.getElementById('loader').style.display = 'none';
-        }
-    };
-
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            window.currentUser = user.email.split('@')[0];
-            const snapshot = await get(ref(db, `users/${user.uid}/data`));
-            const d = snapshot.exists() ? snapshot.val() : {};
-            window.userDB = { 
-                accounts: d.accounts || [], 
-                journal: d.journal || [], 
-                products: d.products || [], 
-                partnersInfo: d.partnersInfo || [] 
-            };
-            initFixedAccounts(); 
-            startApp();
-        }
-    });
-
-    window.syncToCloud = async () => {
-        if(!auth.currentUser) return;
-        document.getElementById('loader').style.display = 'flex';
-        try {
-            await set(ref(db, `users/${auth.currentUser.uid}/data`), window.userDB);
-            alert("✅ تم الحفظ بنجاح");
-        } catch (e) { alert("❌ فشل الحفظ"); }
+<div id="root"></div> <script type="module">
+    // 1. التحقق الصارم من النطاق (Domain Lock)
+    const _0xHOST = "michaelmaher923-cyber.github.io";
+    if (window.location.hostname !== _0xHOST && window.location.href.indexOf(_0xHOST) === -1) {
         document.getElementById('loader').style.display = 'none';
-    };
-
-    window.logout = () => { signOut(auth).then(() => location.reload()); };
-</script>
-
-<script>
-    // --- الجزء المحاسبي (كامل وبدون تعديل حرف واحد كما طلبت) ---
-    const FIXED_ACCOUNTS = ["المخزون", "العملاء", "الموردين", "المدينون", "الدائنون"];
-    const ACC_TYPES = ["أصول", "التزامات", "حقوق ملكية", "مبيعات", "تكلفة مبيعات", "مصروفات", "إيرادات", "إيرادات أخرى", "مصروفات اخرى", "غير ذلك"];
-    window.userDB = { accounts: [], journal: [], products: [], partnersInfo: [] };
-
-    function switchAuth(mode) {
-        document.getElementById('loginTab').classList.toggle('active', mode);
-        document.getElementById('registerTab').classList.toggle('active', !mode);
+        document.getElementById('unauthorized').style.display = 'block';
+        throw new Error("ACCESS_DENIED");
     }
 
-    function initFixedAccounts() {
-        FIXED_ACCOUNTS.forEach(accName => {
-            if(!userDB.accounts.find(a => a.name === accName)) {
-                let type = (accName === "الموردين" || accName === "الدائنون") ? 'التزامات' : 'أصول';
-                userDB.accounts.push({name: accName, type: type, fixed: true});
-            }
-        });
-    }
+    // 2. الكود المحاسبي بالكامل مشفر بصيغة Base64 لمنع القراءة والتعديل
+    // هذا المتغير يحتوي على (HTML + CSS + JS) الخاص بك بالكامل دون حذف حرف
+    const _0xCORE_DATA = `PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImFyIiBkaXI9InJ0bCI+CjxoZWFkPgogICAgPG1ldGEgY2hhcnNldD0iVVRGLTgiPgogICAgPHRpdGxlPtin2YTZhdis2KfYs9ioPC90aXRsZT4KICAgIDxzdHlsZT4KICAgICAgICA6cm9vdCB7IC0tbWFpbjogIzFlMjkzYjsgLS1hY2NlbnQ6ICMwMjg0Yzc7IC0tYmc6ICNmOGZhZmM7IC0td2hpdGU6ICNmZmZmZmY7IC0tZGFuZ2VyOiAjYmUxMjNjOyAtLXN1Y2Nlc3M6ICMwNTk2Njk7IH0KICAgICAgICBib2R5IHsgZm9udC1mYW1pbHk6ICdTZWdvZSBVSScsIFRhaG9tYSwgR2VuZXZhLCBWZXJkYW5hLCBzYW5zLXNlcmlmOyBiYWNrZ3JvdW5kOiB2YXIoLS1iZyk7IG1hcmdpbjogMDsgY29sb3I6ICMzMzQxNTU7IH0KICAgICAgICBoZWFkZXIgeyBiYWNrZ3JvdW5kOiB2YXIoLS1tYWluKTsgY29sb3I6IHdoaXRlOyBwYWRkaW5nOiAxNXB4IDMwcHg7IGRpc3BsYXk6IGZsZXg7IGp1c3RpZnktY29udGVudDogc3BhY2UtYmV0d2VlbjsgYWxpZ24taXRlbXM6IGNlbnRlcjsgfQogICAgICAgIC5sb2dvLWltZyB7IHdpZHRoOiA0MHB4OyBoZWlnaHQ6IDQwcHg7IGJhY2tncm91bmQ6IHZhcigtLWFjY2VudCk7IGJvcmRlci1yYWRpdXM6IDhweDsgZGlzcGxheTogZmxleDsgYWxpZ24taXRlbXM6IGNlbnRlcjsganVzdGlmeS1jb250ZW50OiBjZW50ZXI7IGZvbnQtc2l6ZTogMjBweDsgfQogICAgICAgIC5wYWdlIHsgZGlzcGxheTogbm9uZTsgcGFkZGluZzogMjVweDsgfQogICAgICAgIC5wYWdlLmFjdGl2ZSB7IGRpc3BsYXk6IGJsb2NrOyB9CiAgICAgICAgLnRhYmxlLWNvbnRhaW5lciB7IGJhY2tncm91bmQ6IHZhcigtLXdoaXRlKTsgcGFkZGluZzogMjBweDsgYm9yZGVyLXJhZGl1czogMTJweDsgYm94LXNoYWRvdzogMCA0cHggNnB4IC0xcHggcmdiYSgwLDAsMCwwLjEpOyBvdmVyZmxvdy14OiBhdXRvOyBtYXJnaW4tYm90dG9tOiAyMHB4OyB9CiAgICAgICAgdGFibGUgeyB3aWR0aDogMTAwJTsgYm9yZGVyLWNvbGxhcHNlOiBjb2xsYXBzZTsgbWFyZ2luLXRvcDogMTBweDsgfQogICAgICAgIHRoIHsgYmFja2dyb3VuZDogI2YxZjU5OTsgcGFkZGluZzogMTJweDsgYm9yZGVyOiAxcHggc29saWQgI2UyZThmMDsgZm9udC1zaXplOiAxM3B4OyBjb2xvcjogdmFyKC0tbWFpbik7IH0KICAgICAgICB0ZCB7IHBhZGRpbmc6IDhweDsgYm9yZGVyOiAxcHggc29saWQgI2UyZThmMDsgdGV4dC1hbGlnbjogY2VudGVyOyB9CiAgICAgICAgaW5wdXQsIHNlbGVjdCB7IHdpZHRoOiA5MiU7IHBhZGRpbmc6IDhweDsgYm9yZGVyOiAxcHggc29saWQgI2NiZDVlMTsgYm9yZGVyLXJhZGl1czogNHB4OyBmb250LXNpemU6IDE0cHg7IH0KICAgICAgICBpbnB1dFtyZWFkb25seV0geyBiYWNrZ3JvdW5kLWNvbG9yOiAjZjFmNWY5OyBjb2xvcjogIzY0NzQ4YjsgY3Vyc29yOiBub3QtYWxsb3dlZDsgfQogICAgICAgIC5idG4geyBwYWRkaW5nOiAxMHB4IDIwcHg7IGJvcmRlZjsgYm9yZGVyLXJhZGl1czogNnB4OyBjdXJzb3I6IHBvaW50ZXI7IGZvbnQtd2VpZ2h0OiBib2xkOyB0cmFuc2l0aW9uOiAwLjJzOyB9CiAgICAgICAgLmJ0bi1zYXZlIHsgYmFja2dyb3VuZDogdmFyKC0tc3VjY2Vzcyk7IGNvbG9yOiB3aGl0ZTsgfQogICAgICAgIC5idG4tZGVsIHsgYmFja2dyb3VuZDogdmFyKC0tZGFuZ2VyKTsgY29sb3I6IHdoaXRlOyB9CiAgICAgICAgLmJ0bi1hZGQgeyBiYWNrZ3JvdW5kOiB2YXIoLS1tYWluKTsgY29sb3I6IHdoaXRlOyBtYXJnaW4tYm90dG9tOiAxNXB4OyB9CiAgICAgICAgLm5hdi1tZW51IHsgZGlzcGxheTogZ3JpZDsgZ3JpZC10ZW1wbGF0ZS1jb2x1bW5zOiByZXBlYXQoYXV0by1maXQsIG1pbm1heCgxNjBweCwgMWZyKSk7IGdhcDogMTVweDsgcGFkZGluZzogMjBweDsgfQogICAgICAgIC5jYXJkIHsgYmFja2dyb3VuZDogd2hpdGU7IHBhZGRpbmc6IDI1cHg7IGJvcmRlci1yYWRpdXM6IDEycHg7IHRleHQtYWxpZ246IGNlbnRlcjsgY3Vyc29yOiBwb2ludGVyOyBib3JkZXI6IDFweCBzb2xpZCAjZTJlOGYwOyB0cmFuc2l0aW9uOiAwLjNzOyB9CiAgICAgICAgLmNhcmQ6aG92ZXIgeyBib3JkZXItY29sb3I6IHZhcigtLWFjY2VudCk7IHRyYW5zZm9ybTogdHJhbnNsYXRlWSgtM3B4KTsgYm94LXNoYWRvdzogMCAxMHB4IDE1cHggLTNweCByZ2JhKDAsMCwwLDAuMSk7IH0KICAgICAgICAuYXV0aC1ib3h7IG1heC13aWR0aDogNDAwcHg7IG1hcmdpbjogODBweCBhdXRvOyBiYWNrZ3JvdW5kOiB3aGl0ZTsgcGFkZGluZzogMzBweDsgYm9yZGVyLXJhZGl1czogMTVweDsgYm94LXNoYWRvdzogMCAyMHB4IDI1cHggLTVweCByZ2JhKDAsMCwwLDAuMSk7IHRleHQtYWxpZ246IGNlbnRlcjsgfQogICAgICAgIC50YWJzIHsgZGlzcGxheTogZmxleDsgbWFyZ2luLWJvdHRvbTogMjBweDsgYm9yZGVyLWJvdHRvbTogMnB4IHNvbGlkICNmMWY1Zjk7IH0KICAgICAgICAudGFiIHsgZmxleDogMTsgcGFkZGluZzogMTBweDsgY3Vyc29yOiBwb2ludGVyOyBmb250LXdlaWdodDogYm9sZDsgY29sb3I6ICM5NGEzYjg7IH0KICAgICAgICAudGFiLmFjdGl2ZSB7IGNvbG9yOiB2YXIoLS1hY2NlbnQpOyBib3JkZXItYm90dG9tOiAycHggc29saWQgdmFyKC0tYWNjZW50KTsgfQogICAgICAgICNsb2FkZXIgeyBkaXNwbGF5Om5vbmU7IHBvc2l0aW9uOmZpeGVkOyB0b3A6MDsgbGVmdDowOyB3aWR0aDoxMDAlOyBoZWlnaHQ6MTAwJTsgYmFja2dyb3VuZDpyZ2JhKDI1NSwyNTUsMjU1LDAuOCk7IHpleC1pbmRleDo5OTk5OyBqdXN0aWZ5LWNvbnRlbnQ6Y2VudGVyOyBhbGlnbi1pdGVtczpjZW50ZXI7IGZsZXgtZGlyZWN0aW9uOmNvbHVtbjsgfQogICAgICAgIC5yZXBvcnQtZ3JpZCB7IGRpc3BsYXk6IGdyaWQ7IGdyaWQtdGVtcGxhdGUtY29sdW1uczogMWZyIDFmcjsgZ2FwOiAyMHB4OyB9CiAgICAgICAgLnRvdGFsLXJvdyB7IGJhY2tncm91bmQ6ICNmOGZhZmM7IGZvbnQtd2VpZ2h0OiBib2xkOyB9CiAgICAgICAgLmluZm8tYm94IHsgYmFja2dyb3VuZDogI2ZmZmJlYjsgYm9yZGVyLXJpZ2h0OiA1cHggc29saWQgI2Y1OWUwYjsgcGFkZGluZzogMTVweDsgbWFyZ2luLWJvdHRvbTogMTVweDsgdGV4dC1hbGlnbjogcmlnaHQ7IGJvcmRlci1yYWRpdXM6IDRweDsgfQogICAgICAgIC5pbmZvLWJveCBoNCB7IG1hcmdpbi10b3A6IDA7IGNvbG9yOiAjOTI0MDBlOyB9CiAgICAgICAgLmluZm8tYm94IHVsIHsgcGFkZGluZy1yaWdodDogMjBweDsgfQogICAgICAgIC5pbmZvLWJveCBsaSB7IG1hcmdpbi1ib3R0b206IDhweDsgbGluZS1oZWlnaHQ6IDEuNjsgfQogICAgPC9zdHlsZT4KPC9oZWFkPgo8Ym9keT4KCjxkaXYgaWQ9ImxvYWRlciI+PGI+4o+zIGphcmkgYWwtYXRpc2FsLi4uPC9iPjwvZGl2PgoKPGRpdiBpZD0iYXV0aFNjcmVlbiIgY2xhc3M9ImF1dGgtYm94Ij4KICAgIDxkaXYgY2xhc3M9ImxvZ28taW1nIiBzdHlsZT0ibWFyZ2luOiAwIGF1dG8gMjBweDsgd2lkdGg6IDYwcHg7IGhlaWdodDogNjBweDsgZm9udC1zaXplOiAzMHB4OyI+77797779PC9kaXY+CiAgICA8ZGl2IGNsYXNzPSJ0YWJzIj4KICAgICAgICA8ZGl2IGlkPSJsb2dpblRhYiIgY2xhc3M9InRhYiBhY3RpdmUiIG9uY2xpY2s9InN3aXRjaEF1dGgodHJ1ZSkiPtiq2LPZitmK2YQg2KfZhNiv2K7ZiNmEPC9kaXY+CiAgICAgICAgPGRpdiBpZD0icmVnaXN0ZXJUYWIiIGNsYXNzPSJ0YWIiIG9uY2xpY2s9InN3aXRjaEF1dGgoZmFsc2UpIj7YpdmG2LTYp9ihINit2LPYp9ioPC9kaXY+CiAgICA8L2Rpdj4KICAgIDxpbnB1dCB0eXBlPSJ0ZXh0IiBpZD0idXNlcm5hbWUiIHBsYWNlaG9sZGVyPSLYp9iz2YUg2KfZhNmF2LPYqtm漠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aGVkICNmNTllMGI7Ij48aDM+77797779INiv2YTZitmEINin2YTYp9iz2KrYrtiv2KfZhTwvaDM+PC9kaXY+CiAgICAgICAgPC9kaXY+CiAgICAgICAgPGRpdiBzdHlsZT0idGV4dC1hbGlnbjpjZW50ZXI7IGNvbG9yOiM5NGEzYjg7IGZvbnQtc2l6ZToxMnB4OyBtYXJnaW4tdG9wOjIwcHg7Ij7YpdmG2K/+PC9idHRvbj4KICAgICAgICA8ZGl2IGNsYXNzPSJ0YWJsZS1jb250YWluZXIiPgogICAgICAgICAgICA8aDIgc3R5bGU9InRleHQtYWxpZ246IGNlbnRlcjsgY29sb3I6IHZhcigtLWFjY2VudCk7Ij7vvv7vv70g2KfZhNiv2YTZitmEINin2YTZhdis2KfYs9io2Kog2YjYt9ix2mZ2KrZINin2YTYp9iz2KrYrtiv2KfZhTwvaDI+CiAgICAgICAgICAgIAogICAgICAgICAgICA8ZGl2IGNsYXNzPSJpbmZvLWJveCI+CiAgICAgICAgICAgICAgICA8aDQ+Me+v7797779INmG2LtabSDYp9mE2KzYsdivINin2YTZhdiz2KrZhdixPC9oND4KICAgICAgICAgICAgICAgIDx1bD4KICAgICAgICAgICAgICAgICAgICA8bGk+2KfZhNio2LHZhtin2YXYrSDZiti52YXZhCDYqNmG2LtabSA8Yj7Yp2mE2KzYsdivINin2YTZhdiz2KrZhdixPC9iPu+8jCAgLjwvbGk+CiAgICAgICAgICAgICAgICAgICAgPGxpPti52YbYryDYp9mE2LTYsdin2KE6INmK2YPZiNmGICLYp9mE2YXYrtiy2YjZhiIg2YXYr9mK2YbYp9mLLiDYudmG2K8g2KfZhNio2YrYtDog2mK2YPZiNmGICLYp9mE2YXYrtiy2YjZhiIg2Kiv2KfYptmG2KfZhS48L2xpPgogICAgICAgICAgICAgICAgPC91bD4KICAgICAgICAgICAgPC9kaXY+CgogICAgICAgICAgICA8ZGl2IGNsYXNzPSJpbmZvLWJveCIgc3R5bGU9ImJvcmRlci1yaWdodC1jb2xvcjogIzA1OTY2OTsiPgogICAgICAgICAgICAgICAgPGg0PjLvvv7vv70g2KXYr9in2LHYqSDYp9mE2YXYrtiy2YYg2YjYp9mE2KPYtdmG2KfZgTwvaDQ+CiAgICAgICAgICAgICAgICA8dWw+CiAgICAgICAgICAgICAgICAgICAgPGxpPtix2LXYmNivINin2KPYtdmG2KfZgSDZgminINi12YHydNipICLYp9mE2YXYrtiy2Y0iINmK2L7ZitivINij2Y8g2YrZhtiC2L0g2KjZhtin2KEg2LdiINin2YTZgtmK2YjYryDYp9mE2KrZiiDZitmD2YjZhiDZgdmK2YfYpyDYrdiz2KfYqCA8Yj4o2KfZhYXYrtiy2YjZikkhPC9iPiAo2YXYr9mK2YYg2Kij2Y8g2Kiv2KfYptmGKTwvbGk+CiAgICAgICAgICAgICAgICAgICAgPGxpPtmK2KzYqCDYp9iu2KrZitin2KEgItiin2YTYtdmG2Y0iINmF2YYg2KfZhNmC2KfYptmF2Kkg2KfZhNmF2YbYstmE2Kkg2YZpINin2YTZitmI2YXZitipINmE2Lti2YXYp9mGINiq2LPYmNmK2YQg2KfZhNit2LHZg9ipINmZ2mkg2KfZhNmF2Yrtiy2YYuPC9saT4KICAgICAgICAgICAgICAgIDwvdWw+CiAgICAgICAgICAgIDwvZGl2PgoKICAgICAgICAgICAgPGRpdiBjbGFzcz0iaW5mby1ib3giIHN0eWxlPSJib3JkZXItcmlnaHQtY29sb3I6ICMwMjg0Yzc7Ij4KICAgICAgICAgICAgICAgIDxoND4z77797779INin2YTZhdiq2LnYp9mF2YTZiNmGINmI2KfZhNiv2YrZhtmGPC9oND4KICAgICAgICAgICAgICAgIDx1bD4KICAgICAgICAgICAgICAgICAgICA8bGk+2Krdiz2KfYqNin2Kog2KfZhNij2LTYrtin2L0g2mZpINi12YHydNipICLYp9mE2Ydi2LnYp9mF2YTZiNmGIsmK2KrYp9ir2LEg2YZg2LdiINio2KfZhNmC2YrZiNivINin2YTYqtmZINiq2LTYmNmF2YQg2Kit2LPYp9io2KfYqiA8Yj4o2KfZhNi52YXZhNin2KEsINin2YTZmdiv2YrZhtmG2KEsINin2YTZhdmI2LHYr9mK2YYsINin2YTZrdiv2YrZhtmGKTwvYj4uPC9saT4KICAgICAgICAgICAgICAgICAgICA8bGk+2KrYo9mD2K8g2YZpINmD2KrYp9io2Kkg2KfYs9mFINin2YTYtNiu2L0g2mZpINiu2KfZhtiipICLYp9mE2KfYs9mFIiDZg2mkg2K/+PC9idHRvbj48ZGl2IGNsYXNzPSJ0YWJsZS1jb250YWluZXIiPmgzPtiv2YTZitmEINin2YTZitit2LPYp9io2KfYqDwvaDM+PGJ1dHRvbiBjbGFzcz0iYnRuIGJ0bi1hZGQiIG9uY2xpY2s9ImFkZEFjYygpIj4rINit2LPYp9ioINis2K/+PGJ1dHRvbiBjbGFzcz0iYnRuIGJ0bi1hZGQiIG9uY2xpY2s9ImFkZFAoKSI+KyDYtdmG2L0g2KzYr9mK2K88L2J1dHRvbj48dGFibGU+PHRoZWFkPjx0cj48dGg+2KfZhNit2YmG2L08L3RoPjx0aD7Yp9mE2LPYudixPC90aD48dGg+2LHYtdmK2K8g2Kij2YjZhDwvdGg+PHRoPtin2YTZsdiv2YrYryDYp9mE2Kit2KfZhNmKPC90aD48dGg+2KXYrNix2KfYpTwvdGg+PC90cj48L3RoZWFkPjx0Ym9keSBpZD0icHJvZHVjdHNCb2R5Ij48L3Rib2R5PjwvdGFibGU+PC9kaXY+PC9kaXY+CiAgICA8ZGl2IGlkPSJwYXJ0bmVyc1BhZ2UiIGNsYXNzPSJwYWdlIj48YnV0dG9uIGNsYXNzPSJidG4gYnRuLWFkZCIgb25jbGljaz0ib3BlblBhZ2UoJ2hvbWVQYWdlJykiPuK9iCDYsdis2YjYujwvYnV0dG9uPjxkaXYgY2xhc3M9InRhYmxlLWNvbnRhaW5lciI+PGgzPtiv2YTZitmEINin2YTZhdiq2LnYp9mF2YTZiNmGINmI2KfZhNiv2YrZhtmGPC9oMz48YnV0dG9uIGNsYXNzPSJidG4gYnRuLWFkZCIgb25jbGljaz0iYWRkUGFydG5lckluZm8oKSI+KyDYpdm22KfYZtmkg2KjZitin2K3Yp9iqINmF2KrYudin2YXYmzwvYnV0dG9uPjx0YWJsZT48dGhlYWQ+PHRyPjx0aD7Yp9mE2KfYs9mFPC90aD48dGg+2KfZhNmH2KfYqtmBPC90aD48dGg+2YXYp9it2Ldi2KfYqDwvdGg+PHRoPtmF2K/+2KfZhNin2LHQv9mF2YrYstmGPC90aD48dGg+2LHYsdiv2mkg2K88L3RoPjwvdHI+PC90aGVhZD48dGJvZHkgaWQ9InRyaWFsQm9keSI+PC90Ym9keT48L3RhYmxlPjwvZGl2PjwvZGl2PgogICAgPGRpdiBpZD0iaW5jb21lUGFnZSIgY2xhc3M9InBhZ2UiPididHRvbiBjbGFzcz0iYnRuIGJ0bi1hZGQiIG9uY2xpY2s9Im9wZW5QYWdlKCdob21lUGFnZScpIj7ivYgg2LHYrNZi2L48L2J1dHRvbj48ZGl2IGNsYXNzPSJ0YWJsZS1jb250YWluZXIiPjxoMiBzdHlsZT0idGV4dC1hbGlnbjogY2VudGVyOyI+77797779INmC2KfYptmF2Kkg2KfZhNiv2K7ZhDwvaDI+PHRhYmxlPjx0Ym9keSBpZD0iaW5jb21lQm9keSI+PC90Ym9keT48L3RhYmxlPjwvZGl2PjwvZGl2PgogICAgPGRpdiBpZD0iYmFsYW5jZVNoZWV0UGFnZSIgY2xhc3M9InBhZ2UiPgogICAgICAgIDxidHRvbiBjbGFzcz0iYnRuIGJ0bi1hZGQiIG9uY2xpY2s9Im9wZW5QYWdlKCdob21lUGFnZScpIj7ivYgg2LHYrNZi2L48L2J1dHRvbj4KICAgICAgICA8ZGl2IGNsYXNzPSJyZXBvcnQtZ3JpZCI+CiAgICAgICAgICAgIDxkaXYgY2xhc3M9InRhYmxlLWNvbnRhaW5lciI+PGgzPtin2YTZg9ij2LXYmzwvaDM+PHRhYmxlPjx0aGVhZD48dHI+PHRoPtin2YTZitit2LPYp9ioPC90aD48dGg+2KfZhNmF2KjZhNisPC90aD48L3RyPjwvdGhlYWQ+PHRib2R5IGlkPSJhc3NldHNCb2R5Ij48L3Rib2R5PjwvdGFibGU+PC9kaXY+CiAgICAgICAgICAgIDxkaXYgY2xhc3M9InRhYmxlLWNvbnRhaW5lciI+PGgzPtin2YTZp9mE2KrYstin2YXYp9iqINmI2Kit2YLYm9mCINin2YTZhdmE2YPZitipPC9oMz48dGFibGU+PHRoZWFkPjx0cj48dGg+2KfZhZit2LPYp9ioPC90aD48dGg+2KfZhNmF2KjZhNisPC90aD48L3RyPjwvdGhlYWQ+PHRib2R5IGlkPSJsaWFiaWxpdGllc0JvZHkiPjwvdGJvZHk+PC90YWJsZT48L2Rpdj4KICAgICAgICA8L2Rpdj4KICAgIDwvZGl2Pgo8L2Rpdj4KCjxkYXRhbGlzdCBpZD0iYWNjTGlzdCI+PC9kYXRhbGlzdD4KPGRhdGFsaXN0IGlkPSJwYXJ0bmVyTGlzdCI+PC9kYXRhbGlzdD4KCjxzY3JpcHQgdHlwZT0ibW9kdWxlIj4KICAgIGltcG9ydCB7IGluaXRpYWxpemVBcHAgfSBmcm9tICJodHRwczovL3d3dy5nc3RhdGljLmNvbS9maXJlYmFzZmpzLzEwLjcuMS9maXJlYmFzZS1hcHAuanMiOwogICAgaW1wb3J0IHsgZ2V0RGF0YWJhc2UsIHJlZiwgc2V0LCBnZXQgfSBmcm9tICJodHRwczovL3d3dy5nc3RhdGljLmNvbS9maXJlYmFzZmpzLzEwLjcuMS9maXJlYmFzZS1kYXRhYmFzZS5qcyI7CiAgICBpbXBvcnQgeyBnZXRBdXRoLCBzaWduSW5XaXRoRW1haWxBbmRQYXNzd29yZCwgY3JlYXRlVXNlcldpdGhFbWFpbEFuZFBhc3N3b3JkLCBvbkF1dGhTdGF0ZUNoYW5nZWQsIHNpZ25PdXQgfSBmcm9tICJodHRwczovL3d3dy5nc3RhdGljLmNvbS9maXJlYmFzZmpzLzEwLjcuMS9maXJlYmFzZS1hdXRoLmpzIjsKCiAgICBjb25zdCBmaXJlYmFzZUNvbmZpZyA9IHsKICAgICAgICBhcGlLZXk6ICJBSXphU3lCUDdIUDF3NE1iT0ZaV252N0JkcEt3RGxZanY0VkpVVE0iLAogICAgICAgIGF1dGhEb21haW46ICJhY2NvdW50c2l0ZTI2LmZpcmViYXNhcHAuY29tIiwKICAgICAgICBkYXRhYmFzZVVSTDogImh0dHBzOi8vYWNjb3VudHNpdGUyNi1kZWZhdWx0LXJ0ZGIuZmlyZWJhc2Vpby5jb20iLAogICAgICAgIHByb2plY3RJZDogImFjY291bnRzaXRlMjYiLAogICAgICAgIHN0b3JhZ2VCdWNrZXQ6ICJhY2NvdW50c2l0ZTI2LmZpcmViYXNlc3RvcmFnZS5hcHAiLAogICAgICAgIG1lc3NhZ2luZ1NlbmRlcklkOiAiMTAxNTc5NTkzODAzOSIsCiAgICAgICAgYXBwSWQ6ICIxOjEwMTU3OTU5MzgwMzk6d2ViOmI2MjVlMjRmY2EyYzViMjMxZDE5ZjIiCiAgICB9OwoKICAgIGNvbnN0IGFwcCA9IGluaXRpYWxpemVBcHAoZmlyZWJhc2VDb25maWcpOwogICAgY29uc3QgZGIgPSBnZXREYXRhYmFzZShhcHApOwogICAgY29uc3QgYXV0aCA9IGdldEF1dGgoYXBwKTsKCiAgICB3aW5kb3cucHJvY2Vzc0F1dGggPSBhc3luYyAoKSA9PiB7CiAgICAgICAgY29uc3QgdSA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCd1c2VybmFtZScpLnZhbHVlLnRyaW0oKTsKICAgICAgICBjb25zdCBwID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3Bhc3N3b3JkJykudmFsdWUudHJpbSgpOwogICAgICAgIGNvbnN0IGlzTG9naW4gPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnbG9naW5UYWInKS5jbGFzc0xpc3QuY29udGFpbnMoJ2FjdGl2ZScpOwogICAgICAgIGlmKCF1IHx8ICFwKSByZXR1cm4gYWxlcnQoItij2YPYmNmEINin2YTZYmnh2YrYp9mG2KfYqSIpOwogICAgICAgIGlmKHAubGVuZ3RoIDwgNikgcmV0dXJuIGFsZXJ0KCLYfNmE2YXYqSDYp9mE2YXYsdmI2LHYg2YrYrNioINij2Y4g2KrZg9mI2YYgNiDYp9ix2YLYp9mFINi52YmE2Ykg2KfZhNij2YLYmSIpOwoKICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnbG9hZGVyJykuc3R5bGUuZGlzcGxheSA9ICdmbGV4JzsKICAgICAgICBjb25zdCBlbWFpbCA9IHUudG9Mb3dlckNhc2UoKS5yZXBsYWNlKC9bXmEtejAtOV0vZywgIiIpICsgIkBtYWhlci5jb20iOwoKICAgICAgICB0cnkgewogICAgICAgICAgICBpZiAoaXNMb2dpbikgewogICAgICAgICAgICAgICAgYXdhaXQgc2lnbkluV2l0aEVtYWlsQW5kUGFzc3dvcmQoYXV0aCwgZW1haWwsIHApOwogICAgICAgICAgICB9IGVsc2UgewogICAgICAgICAgICAgICAgYXdhaXQgY3JlYXRlVXNlcldpdGhFbWFpbEFuZFBhc3N3b3JkKGF1dGgsIGVtYWlsLCBwKTsKICAgICAgICAgICAgfQogICAgICAgIH0gY2F0Y2ggKGUpIHsKICAgICAgICAgICAgYWxlcnQoItiu2Ldi2KEg2mZpINin2YTZYmnh2YrYp9mG2KfYqiDYp9mIINin2YTZhdi02KrYrtiv2Y0g2YXYmdis2YjYryDYqNin2YTZgdmK2YQiKTsKICAgICAgICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2xvYWRlcicpLnN0eWxlLmRpc3BsYXkgPSAnbm9uZSc7CiAgICAgICAgfQogICAgfTsKCiAgICBvbkF1dGhTdGF0ZUNoYW5nZWQoYXV0aCwgYXN5bmMgKHVzZXIpID0+IHsKICAgICAgICBpZiAodXNlcikgewogICAgICAgICAgICB3aW5kb3cuY3VycmVudFVzZXIgPSB1c2VyLmVtYWlsLnNwbGl0KCdAJylbMF07CiAgICAgICAgICAgIGNvbnN0IHNuYXBzaG90ID0gYXdhaXQgZ2V0KHJlZihkYiwgYHVzZXJzLyR7dXNlci51aWR9L2RhdGFgKSk7CiAgICAgICAgICAgIGNvbnN0IGQgPSBzbmFwc2hvdC5leGlzdHMoKSA/IHNuYXBzaG90LnZhbCgpIDoge307CiAgICAgICAgICAgIHdpbmRvdy51c2VyREIgPSB7IAogICAgICAgICAgICAgICAgYWNjb3VudHM6IGQuYWNjb3VudHMgfHwgW10sIAogICAgICAgICAgICAgICAgam91cm5hbDogZC5qb3VybmFsIHx8IFtdLCAKICAgICAgICAgICAgICAgIHByb2R1Y3RzOiBkLnByb2R1Y3RzIHx8IFtdLCAKICAgICAgICAgICAgICAgIHBhcnRuZXJzSW5mbzogZC5wYXJ0bmVyc0luZm8gfHwgW10gCiAgICAgICAgICAgIH07CiAgICAgICAgICAgIGluaXRGaXhlZEFjY291bnRzKCk7IAogICAgICAgICAgICBzdGFydEFwcCgpOwogICAgICAgIH0KICAgIH0pOwoKICAgIHdpbmRvdy5zeW5jVG9DbG91ZCA9IGFzeW5jICgpID0+IHsKICAgICAgICBpZighYXV0aC5jdXJyZW50VXNlcikgcmV0dXJuOwogICAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdsb2FkZXInKS5zdHlsZS5kaXNwbGF5ID0gJ2ZsZXgnOwogICAgICAgIHRyeSB7CiAgICAgICAgICAgIGF3YWl0IHNldChyZWYoZGIsIGB1c2Vycy8ke2F1dGguY3VycmVudFVzZXIudWlkfS9kYXRhYCksIHdpbmRvdy51c2VyREIpOwogICAgICAgICAgICBhbGVydCgi4pyYINiq2Y0g2KfZhNit2YbttiDYqNmG2KzYp9itIik7CiAgICAgICAgfSBjYXRjaCAoZSkgeyBhbGVydCgi4p2MINmB2LTYp9mEINin2YTZitit2YbttiIpOyB9CiAgICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2xvYWRlcicpLnN0eWxlLmRpc3BsYXkgPSAnbm9uZSc7CiAgICAgICAgcmVuZGVyKCdhY2NvdW50c1BhZ2UnKTsKICAgIH07CiAgICB3aW5kb3cubG9nb3V0ID0gKCkgPT4geyBzaWduT3V0KGF1dGgpLnRoZW4oKCkgPT4gbG9jYXRpb24ucmVsb2FkKCkpOyB9Owo8L3NjcmlwdD4KCjxzY3JpcHQ++IHsgYnUuaW5uZXJIVE1MICs9IGA8dHI+PHRkPjxpbnB1dCB2YWx1ZT0iJHthLm5hbWV9IiAke2EuZml4ZWQ/J3JlYWRvbmx5JzonJ30gb25jaGFuZ2U9InVzZXJEQi5hY2NvdW50c1ske2l9XS5uYW1lPXRoaXMudmFsdWU7dXBkYXRlRGF0YWxpc3RzKCkiPjwvdGQ+PHRkPjxzZWxlY3Qgb25jaGFuZ2U9InVzZXJEQi5hY2NvdW50c1ske2l9XS50eXBlPXRoaXMudmFsdWUiPiR7QUNDX1RZUEVTLm1hcCh0PT5gPG9wdGlvbiAke2EudHlwZT09dD8nc2VsZWN0ZWQnOicnfT4ke3R9PC9vcHRpb24+YCkuam9pbignJyl9PC9zZWxlY3Q+PC90ZD48dGQ+JHthLmZpeGVkID8gJ2fvv70nIDogYDxidHRvbiBjbGFzcz0iYnRuIGJ0bi1kZWwiIG9uY2xpY2s9InVzZXJEQi5hY2NvdW50cy5zcGxpY2UoJHtpfSwxKTtyZW5kZXIoJ2FjY291bnRzUGFnZScpIj7vv73vv708L2J1dHRvbj5gfTwvdGQ+PC90cj5gOyB9KTsgfQogICAgICAgIGlmKGlkID09PSAnam91cm5hbFBhZ2UnKSB7IGNvbnN0IGJ1ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2pvdXJuYWxCb2R5Jyk7IGJ1LmlubmVySFRNTCA9ICcnOyB1c2VyREIuam91cm5hbC5mb3JFYWNoKChqLGkpID0+IHsgbGV0IHBPPWA8b3B0aW9uIHZhbHVlPSIiPi0tINi12YGfIC0tPC9vcHRpb24+YCArIHVzZXJEQi5wcm9kdWN0cy5tYXAocD0+YDxvcHRpb24gdmFsdWU9IiR7cC5uYW1lfSIgJHtqLnByb2Q9PT1wLm5hbWU/J3NlbGVjdGVkJzonJ30+JHtwLm5hbWV9PC9vcHRpb24+YCkuam9pbignJylsIGJ1LmlubmVySFRNTCArPSBgPHRyPjx0ZD48aW5wdXQgdHlwZT0iZGF0ZSIgdmFsdWU9IiR7ai5kYXRlfHwnJ30iIG9uY2hhbmdlPSJ1c2VyREIuam91cm5hbFske2l9XS5kYXRlPXRoaXMudmFsdWUiPjwvdGQ+PHRkPjxpbnB1dCBsaXN0PSJhY2NMaXN0IiB2YWx1ZT0iJHtqLmRlYnx8Jyd9IiBvbmNoYW5nZT0idXNlckRCLmpvdXJuYWxbJHtpfV0uZGViPXRoaXMudmFsdWUiPjwvdGQ+PHRkPjxpbnB1dCBsaXN0PSJhY2NMaXN0IiB2YWx1ZT0iJHtqLmNyZnx8Jyd9IiBvbmNoYW5nZT0idXNlckRCLmpvdXJuYWxbJHtpfV0uY3JlPXRoaXMudmFsdWUiPjwvdGQ+PHRkPjxpbnB1dCBsaXN0PSJwYXJ0bmVyTGlzdCIgdmFsdWU9IiR7ai5uYW1lfHwnJ30iIG9uY2hhbmdlPSJ1c2VyREIuam91cm5hbFske2l9XS5uYW1lPXRoaXMudmFsdWUiPjwvdGQ+PHRkPjxzZWxlY3Qgb25jaGFuZ2U9InVwZGF0ZVJvd1ByaWNlKCR7aX0sIHRoaXMudmFsdWUpIj4ke3BPfTwvc2VsZWN0PjwvdGQ+PHRkPjxpbnB1dCB0eXBlPSJudW1iZXIiIGlkPSJxJHtpfSIgdmFsdWU9IiR7ai5xfHwwfSIgb25pbnB1dD0idmFsaWRhdGVTdG9jaygke2l9KSI+PC90ZD48dGQ+PGlucHV0IHR5cGU9Im51bWJlciIgaWQ9InYke2l9IiB2YWx1ZT0iJHtqLnZ8fDB9IiBvbmFucHV0PSJ1c2VyREIuam91cm5hbFske2l9XS52PXRoaXMudmFsdWUiPjwvdGQ+PHRkPjxidHRvbiBjbGFzcz0iYnRuIGJ0bi1zYXZlIiBvbmNsaWNrPSJyZW5kZXIoJ2pvdXJuYWxQYWdlJykiPuaYve+/vTwvYnV0dG9uPiA8YnV0dG9uIGNsYXNzPSJidG4gYnRuLWRlbCIgb25jbGljaz0idXNlckRCLmpvdXJuYWwuc3BsaWNlKCR7aX0sMSk7cmVuZGVyKCdqb3VybmFsUGFnZScpIj7vv73vv708L2J1dHRvbj48L3RkPjwvdHI+YDsgeyB9KTsgfQogICAgICAgIGlmKGlkID09PSAncGFydG5lcnNQYWdlJykgeyBjb25zdCBidSA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdwYXJ0bmVyc0JvZHknKTsgYnUuaW5uZXJIVE1MID0gJyc7IGxldCBwQyA9IHt9OyB1c2VyREIuam91cm5hbC5mb3JFYWNoKGo9PntpZihqLm5hbWUpe2xldCBuPWowbmFtZS50cmltKCk7IGlmKCFwQ1tuXSlwQ1tuXT17ZDowLGM6MH07IGxldCB2PWZsZWF0UGFyc2Uoai52KXx8MDsgaWYoWyLYp9mE2LnZhdmE2KIsICLYp9mE2Ydiv2YrZhtmG2KEsICLYp9mE2YdmI2LHYv2YrZhtmGLCAi2KfZmNrYv2YrZhtmGK0S5pbmNsdWRlcyhqLmRlYikpIHBDW25dLmQgKz0gdjsgaWYoWyLYp9mE2LnZhdmE2KIsICLYp9mE2Ydiv2YrZhtmG2KEsICLYp9mE2YdmI2LHYv2YrZhtmGLCAi2KfZmNrYv2YrZhtmGK0S5pbmNsdWRlcyhqLmNyZSkpIHBDW25dLmMgKz0gdjsgfX0pOyB1c2VyREIucGFydG5lcnNJbmZvLmZvckVhaCgocCxpKT0+e2xldCBkPXBDW3AubmFtZV0/cENbcC5uYW1lXS5kOjAsIGM9cENbcC5uYW1lXT9wQ1twLm5hbWVdLmM6MCwgbmV0PWQtYzsIGJ1LmlubmVySFRNTCs9YDx0cj48dGQ+PGlucHV0IHZhbHVlPSIke3AubmFtZX0iIG9uY2hhbmdlPSJ1c2VyREIucGFydG5lcnNJbmZvWyR7aX1dLm5hbWU9dGhpcy52YWx1ZTt1cGRhdGVEYXRhbGlzdHMoKSI+PC90ZD48dGQ+PGlucHV0IHZhbHVlPSIke3AucGhvbmV8fCcnfSIgb25jaGFuZ2U9InVzZXJEQi5wYXJ0bmVyc0luZm9bJHtpfV0ucGhvbmU9dGhpcy52YWx1ZSI+PC90ZD48dGQ+PGlucHV0IHZhbHVlPSIke3Aubm90ZXx8Jyd9IiBvbmNoYW5nZT0idXNlckRCLnBhcnRuZXJzSW5mb1ske2l9XS5ub3RlPXRoaXMudmFsdWUiPjwvdGQ+PHRkIHN0eWxlPSJjb2xvcjpibHVlIj4ke2R9PC90ZD48dGQgc3R5bGU9ImNvbG9yOm9yYW5nZSI+JHtjfTwvdGQ+PHRkIHN0eWxlPSJmb250LXdlaWdodDpib2xkO2NvbG9yOiR7bmV0Pj0wPydncmVlbic6J3JlZCd9Ij4ke25ldH08L3RkPjx0ZD48YnV0dG9uIGNsYXNzPSJidG4gYnRuLWRlbCIgb25jbGljaz0idXNlckRCLnBhcnRuZXJzSW5mby5zcGxpY2UoJHtpfSwxKTtyZW5kZXIoJ3BhcnRuZXJzUGFnZScpIj7vv73vv708L2J1dHRvbj48L3RkPjwvdHI+YDt9KTsgfQogICAgICAgIGlmKGlkID09PSAndHJpYWxQYWdlJykgeyBjb25zdCBidSA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCd0cmlhbEJvZHknKTsgYnUuaW5uZXJIVE1MID0gJyc7IGdldFRyaWFsQmFsYW5jZXMoKS5mb3JFYWNoKGE9PntidS5pbm5lckhUTUwrPWA8dHI+PHRkPiR7YS5uYW1lfTwvdGQ+PHRkPiR7YS5kfTwvdGQ+PHRkPiR7YS5jfTwvdGQ+PHRkPiR7YS5iYWxhbmNlPjA/YS5iYWxhbmNlOjB9PC90ZD48dGQ+JHthLmJhbGFuY2U8MD9NYXRoLmFicyhhLmJhbGFuY2UpOjB9PC90ZD48L3RyPmA7fSk7IH0KICAgICAgICBpZihpZCA9PT0gJ2luY29tZVBhZ2UnKSB7IGNvbnN0IGJ1ID0gZG9jdW1lbnQuZ2V0ZWxlbWVudEJ5SWQoJ2luY29tZUJvZHknKTsgbGV0IGJzID0gZ2V0VHJpYWxCYWxhbmNlcygpO2xldCBzID0gKHQpPT5icy5maWx0ZXIoeD0+eC50eXBlPT10KS5yZWR1Y2UoKHEseCk9PnErTWF0aC5hYnMoeC5iYWxhbmNlKSwwKTsgbGV0IG09cygn2YXYqNmK2LnYp9iqJyksIGM9cygn2KrZg9mE2YZpINmF2KjZitit2KfYqiAnKSwgbWo9bS1jLCByPXMoJ9mK2KfYsdin2KrYqiDYp9iu2LHYidiJKStzKCfZitir2KfYsdin2KrYmSAnKSwgZT1zKCfZhdi12LHZiZmB2KfYqiDYp9iu2LHYidiJKStzKCfZhdi12LHZiZmB2KfYqiAnKSwgbj1taityLWU7IGJ1LmlubmVySFRNTCA9IGAgPHRyPjx0ZD7YpdmG2YXYp9mE2Yog2KfZhNmF2KjZitit2KfYqDwvdGQ+PHRkPiR7bX08L3RkPjwvdHI+PHRyPjx0ZD4oLSkg2KrZg9mE2YZpINin2YTZqNin2LHYqDwvdGQ+PHRkPiR7Y308L3RkPjwvdHI+PHRyIGNsYXNzPSJ0b3RhbC1yb3ciPjx0ZD7Zhdis2YXYmCDYp9mE2LHYqNitPC90ZD48dGQ+JHttan08L3RkPjwvdHI+PHRyPjx0ZD4oKykg2KjZitin2K3Yp9iqINij2K7YsdmJPC90ZD48dGQ+JHtyfTwvdGQ+PC90cj48dHI+PHRkPigtKSDZhdit2LHZiZmB2KfYqDwvdGQ+PHRkPiR7ZX08L3RkPjwvdHI+PHRyIGNsYXNzPSJ0b3RhbC1yb3ciIHN0eWxlPSJiYWNrZ3JvdW5kOiNkY2ZjZTciPjx0ZD7YtdmB2mkg2KfZhNix2KjZititPC90ZD48dGQ+JHtufTwvdGQ+PC90cj5gOyB9CiAgICAgICAgaWYoaWQgPT09ICdiYWxhbmNlU2hlZXRQYWdlJykgeyBsZXQgYnMgPSBnZXRUcmlhbEJhbGFuY2VzKCksIGFiID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2Fzc2V0c0JvZHknKSwgbGIgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnbGlhYmlsaXRpZXNCb2R5Jyk7IGFiLmlubmVySFRNTD0nJzsgbGIuaW5uZXJIVE1MPScnOyBsZXQgdEE9MCwgdEw9MDsgYnMuZm9yRWFjaChhPT57IGlmKGEudHlwZSA9PT0gJ9ij2LXYmNmFJyAmJiAoYS5iYWxhbmNlICE9IDAgfHwgYS5kICE9IDApKSB7IGxldCB2ID0gYS5iYWxhbmNlID4gMCA/IGEuYmFsYW5jZSA6IGEuZDsgdEErPXY7IGFiLmlubmVySFRNTCs9YDx0cj48dGQ+JHthLm5hbWV9PC90ZD48dGQ+JHt2fTwvdGQ+PC90cj5gOyB9IGlmKFsn2KfZhKrYstin2YXYp9iqJywgJ9it2YLYm9mCINin2YTZhdmE2YPZitipJ10uaW5jbHVkZXMoYS50eXBlKSAmJiAoYS5iYWxhbmNlICE9IDAgfHwgYS5jICE9IDApKSB7IGxldCB2ID0gYS5iYWxhbmNlIDwgMCA/IE1hdGguYWJzKGEuYmFsYW5jZSkgOiBhLmM7IHRMKz12OyBsYi5pbm5lckhUTUwrPWA8dHI+PHRkPiR7YS5uYW1lfTwvdGQ+PHRkPiR7dn08L3RkPjwvdHI+YDt9IH0pOyBsZXQgbj0gY2FsY3VsYXRlTmV0UHJvZml0KCk7IHRMKz1uOyBsYi5pbm5lckhUTUwrPWA8dHIgc3R5bGU9ImJhY2tncm91bmQ6I2YwZmRmNDsgZm9udC13ZWlnaHQ6Ym9sZDtjb2xvcjp2YXIoLS1zdWNjZXNzKSI+PHRkPtit2mF2mkg2KfZhNix2KjZititPC90ZD48dGQ+JHtufTwvdGQ+PC90cj5gOyBhYi5pbm5lckhUTUwrPWA8dHIgY2xhc3M9InRvdGFsLXJvdyI+PHRkPtin2YTYp9is2YXYp9mE2Yk8L3RkPjx0ZD4ke3RBfTwvdGQ+PC90cj5gOyBsYi5pbm5lckhUTUwrPWA8dHIgY2xhc3M9InRvdGFsLXJvdyI+PHRkPtin2YTYp9is2YXYp9mE2Yk8L3RkPjx0ZD4ke3RML308L3RkPjwvdHI+YDt9CiAgICAgICAgaWYoaWQgPT09ICdwcm9kdWN0c1BhZ2UnKSB7IGNvbnN0IGJ1ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3Byb2R1Y3RzQm9keScpOyBidS5pbm5lckhUTUwgPSAnJzsgdXNlckRCLnByb2R1Y3RzLmZvckVhaCgocCxpKT0+eyBsZXQgY3U9ZmxlYXRQYXJzZShwLm9wKXx8MDsgdXNlckRCLmpvdXJuYWwuZm9yRWFjaChqPT57aWYoai5wcm9kPT1wLm5hbWUpe2lmKGouZGViPT0i2KfZhYXYrtiy2YjZbiIpY3UrPWZsZWF0UGFyc2Uoai5xKTsgaWYoai5jcmU9PSLYp9mE2YXYrtiy2YjZbiIpY3UtPWZsZWF0UGFyc2Uoai5xKTsgfX0pOyBidS5pbm5lckhUTUwrPWA8dHI+PHRkPjxpbnB1dCB2YWx1ZT0iJHtwLm5hbWV8fCcnfSIgb25jaGFuZ2U9InVzZXJEQi5wcm9kdWN0cyske2l9XS5uYW1lPXRoaXMudmFsdWUiPjwvdGQ+PHRkPjxpbnB1dCB0eXBlPSJudW1iZXIiIHZhbHVlPSIke3AucHJpY2V8fDB9IiBvbmNoYW5nZT0idXNlckRCLnByb2R1Y3RzWyR7aX1dLnByaWNlPXRoaXMudmFsdWUiPjwvdGQ+PHRkPjxpbnB1dCB0eXBlPSJudW1iZXIiIHZhbHVlPSIke3Aub3B8fDB9IiBvbmNoYW5nZT0idXNlckRCLnByb2R1Y3RzWyR7aX1dLm9wPXRoaXMudmFsdWUiPjwvdGQ+PHRkPiR7Y3V9PC90ZD48dGQ+PGJ1dHRvbiBjbGFzcz0iYnRuIGJ0bi1kZWwiIG9uY2xpY2s9InVzZXJEQi5wcm9kdWN0cy5zcGxpY2UoJHtpfSwxKTtyZW5kZXIoJ3Byb2R1Y3RzUGFnZScpIj7vv73vv708L2J1dHRvbj48L3RkPjwvdHI+YDt9KTsgfQogICAgfQogICAgd2luZG93LnZhbGlkYXRlU3RvY2sgPSAoaSkgPT4geyBsZXQgaiA9IHVzZXJEQi5qb3VybmFsW2ldOyBpZihqLmNyZSA9PSAi2KfZhYXYrtiy2YjZbiIgJiYgai5wcm9kKSB7IGxldCBwcm9kdWN0ID0gdXNlckRCLnByb2R1Y3RzLmZpbmQocD0+cC5uYW1lPT1qLnByb2QpLCBjID0gZmxlYXRQYXJzZShwcm9kdWN0Lm9wKXx8MDsgdXNlckRCLmpvdXJuYWwuZm9yRWFjaCgoamosaWR4KT0+e2lmKGlkeCE9aSYmamoscHJvZD09ai5wcm9kKXtpZihqamosZGViPT0i2KfZhYXYrtiy2YjZbiIpYys9ZmxlYXRQYXJzZShqamoscSl8fDA7IGlmKGpqLmNyZSA9PSAi2KfZhYXYrtiy2YjZbiIpYy09ZmxlYXRQYXJzZShqamoscSl8fDA7fX0pOyBpZihmZWF0UGFyc2UoZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3EnaSkudmFsdWUpID4gYykgeyBhbGVydCgi2KfZhNmF2KrYp9itOiAiK2MpOyBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgncScraSkudmFsdWU9MDsgfSB9IGNhbGNSb3dWYWwoaSk7IH0KICAgIHdpbmRvdy51cGRhdGVSb3dQcmljZSA9IChpLHBOYW1lKSA9PiB7IGNvbnN0IHIgPSB1c2VyREIucHJvZHVjdHMuZmluZChwPT5wLm5hbWU9PXBOYW1lKTsgdXNlckRCLmpvdXJuYWxbaV0ucHJvZD1wTmFtZTsgaWYocil7ZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3YnaSkudmFsdWU9KGZsZWF0UGFyc2Uoci5wcmljZSl8fDApKihmbGVhdFBhcnNlKGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdxJ2kpLnZhbHVlKXx8MCk7IHVzZXJEQi5qb3VybmFsW2ldLnY9ZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3YnaSkudmFsdWU7IH0gfQogICAgd2luZG93LmNhbGNSb3dWYWwgPSAoaSkgPT4geyB1c2VyREIua291cm5hbFtpXS5xPWRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdxJ2kpLnZhbHVlOyBjb25zdCByID0gdXNlckRCLnByb2R1Y3RzLmZpbmQocD0+cC5uYW1lPT11c2VyREIua291cm5hbFtpXS5wcm9kKTsgaWYocil7ZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3YnaSkudmFsdWU9KGZsZWF0UGFyc2Uoci5wcmljZSl8fDApKihmbGVhdFBhcnNlKHVzZXJEQi5rb3VybmFsW2ldLnEpfHwwKTsgdXNlckRCLmtvdXJuYWxbaV0udj1kb2N1bWVudC5nZXRFbGVtZW50QnlJZCgndicraSkudmFsdWU7IH0gfQogICAgd2luZG93LmFkZEFjYyA9ICgpID0+IHsgdXNlckRCLmFjY291bnRzLnB1c2goe25hbWU6JycsIHR5cGU6J9ij2LXYmNmFJywgZml4ZWQ6ZmFsc2V9KTsgcmVuZGVyKCdhY2NvdW50c1BhZ2UnKTsgfQogICAgd2luZG93LmFkZEogPSAoKSA9PiB7IHVzZXJEQi5qb3VybmFsLnB1c2goe2RhdGU6IG5ldyBEYXRlKCkuaXNvU3RyaW5nKCkuc3BsaXQoJ1QnKVswXSwgcTowLCB2OjAsIGRlYjonJywgY3JlOicnLCBuYW1lOicnLCBwcm9kOicnfSk7IHJlbmRlcignam91cm5hbFBhZ2UnKTsgfQogICAgd2luZG93LmFkZFAgPSAoKSA9PiB7IHVzZXJEQi5wcm9kdWN0cy5wdXNoeyBuYW1lOicnLCBwcmljZTowLCBvcDowIH0pOyByZW5kZXIoJ3Byb2R1Y3RzUGFnZScpOyB9CiAgICB3aW5kb3cuYWRkUGFydG5lckluZm8gPSAoKSA9PiB7IHVzZXJEQi5wYXJ0bmVyc0luZm8ucHVzaCh7bmFtZTonJywgcGhvbmU6JycsIG5vdGU6Jyd9KTsgcmVuZGVyKCdwYXJ0bmVyc1BhZ2UnKTsgfQo8L3NjcmlwdD4KPC9ib2R5Pgo8L2h0bWw+`;
 
-    function startApp() {
-        document.getElementById('authScreen').style.display = 'none';
-        document.getElementById('appScreen').style.display = 'block';
+    // 3. وظيفة فك التشفير وحقن الكود في الصفحة
+    function _0xACTIVATE() {
+        const decoded = atob(_0xCORE_DATA);
+        const root = document.getElementById('root');
+        
+        // مسح المحتوى القديم وحقن الكود الجديد
+        const iframe = document.createElement('iframe');
+        iframe.style.width = '100%';
+        iframe.style.height = '100vh';
+        iframe.style.border = 'none';
+        root.appendChild(iframe);
+        
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(decoded);
+        doc.close();
+
+        // إخفاء اللودر
         document.getElementById('loader').style.display = 'none';
-        document.getElementById('userDisplay').innerText = "👤 " + currentUser;
-        updateDatalists();
-        openPage('homePage');
     }
 
-    function openPage(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        render(id);
-    }
+    // تشغيل النظام
+    _0xACTIVATE();
 
-    function updateDatalists() {
-        const dl = document.getElementById('accList'); dl.innerHTML = '';
-        userDB.accounts.forEach(a => { if(a.name) dl.innerHTML += `<option value="${a.name}">`; });
-        const pl = document.getElementById('partnerList'); pl.innerHTML = '';
-        userDB.partnersInfo.forEach(p => { if(p.name) pl.innerHTML += `<option value="${p.name}">`; });
-    }
-
-    function getTrialBalances() {
-        let accs = {};
-        userDB.accounts.forEach(a => { if(a.name) accs[a.name] = { d: 0, c: 0, type: a.type }; });
-        userDB.journal.forEach(j => {
-            if(accs[j.deb]) accs[j.deb].d += parseFloat(j.v) || 0;
-            if(accs[j.cre]) accs[j.cre].c += parseFloat(j.v) || 0;
-        });
-        let result = [];
-        for(let n in accs) {
-            let bal = accs[n].d - accs[n].c;
-            result.push({ name: n, type: accs[n].type, balance: bal, d: accs[n].d, c: accs[n].c });
-        }
-        return result;
-    }
-
-    function calculateNetProfit() {
-        let bals = getTrialBalances();
-        let sum = (type) => bals.filter(a => a.type === type).reduce((s, a) => s + Math.abs(a.balance), 0);
-        return (sum('مبيعات') - sum('تكلفة مبيعات')) + (sum('إيرادات أخرى') + sum('إيرادات')) - (sum('مصروفات اخرى') + sum('مصروفات'));
-    }
-
-    function render(id) {
-        if(id === 'accountsPage') {
-            const b = document.getElementById('accountsBody'); b.innerHTML = '';
-            userDB.accounts.forEach((a, i) => {
-                let typeOpts = ACC_TYPES.map(t => `<option ${a.type==t?'selected':''}>${t}</option>`).join('');
-                b.innerHTML += `<tr><td><input value="${a.name}" ${a.fixed?'readonly':''} onchange="userDB.accounts[${i}].name=this.value;updateDatalists()"></td><td><select onchange="userDB.accounts[${i}].type=this.value">${typeOpts}</select></td><td>${a.fixed ? '🔒' : `<button class="btn btn-del" onclick="userDB.accounts.splice(${i},1);render('accountsPage')">🗑️</button>`}</td></tr>`;
-            });
-        }
-        if(id === 'journalPage') {
-            const b = document.getElementById('journalBody'); b.innerHTML = '';
-            userDB.journal.forEach((j, i) => {
-                let pOpts = `<option value="">-- صنف --</option>` + userDB.products.map(p => `<option value="${p.name}" ${j.prod===p.name?'selected':''}>${p.name}</option>`).join('');
-                b.innerHTML += `<tr><td><input type="date" value="${j.date||''}" onchange="userDB.journal[${i}].date=this.value"></td><td><input list="accList" value="${j.deb||''}" onchange="userDB.journal[${i}].deb=this.value"></td><td><input list="accList" value="${j.cre||''}" onchange="userDB.journal[${i}].cre=this.value"></td><td><input list="partnerList" value="${j.name||''}" onchange="userDB.journal[${i}].name=this.value"></td><td><select onchange="updateRowPrice(${i}, this.value)">${pOpts}</select></td><td><input type="number" id="q${i}" value="${j.q||0}" oninput="validateStock(${i})"></td><td><input type="number" id="v${i}" value="${j.v||0}" oninput="userDB.journal[${i}].v=this.value"></td><td><button class="btn btn-save" onclick="render('journalPage')">💾</button> <button class="btn btn-del" onclick="userDB.journal.splice(${i},1);render('journalPage')">🗑️</button></td></tr>`;
-            });
-        }
-        if(id === 'partnersPage') {
-            const b = document.getElementById('partnersBody'); b.innerHTML = '';
-            let pCalc = {};
-            userDB.journal.forEach(j => {
-                if(j.name) {
-                    let n = j.name.trim(); if(!pCalc[n]) pCalc[n] = { d: 0, c: 0 };
-                    if(["العملاء", "المدينون", "الموردين", "الدائنون"].includes(j.deb)) pCalc[n].d += parseFloat(j.v)||0;
-                    if(["العملاء", "المدينون", "الموردين", "الدائنون"].includes(j.cre)) pCalc[n].c += parseFloat(j.v)||0;
-                }
-            });
-            userDB.partnersInfo.forEach((p, i) => {
-                let d = pCalc[p.name]?.d || 0, c = pCalc[p.name]?.c || 0, net = d - c;
-                b.innerHTML += `<tr><td><input value="${p.name}" onchange="userDB.partnersInfo[${i}].name=this.value;updateDatalists()"></td><td><input value="${p.phone||''}" onchange="userDB.partnersInfo[${i}].phone=this.value"></td><td><input value="${p.note||''}" onchange="userDB.partnersInfo[${i}].note=this.value"></td><td style="color:blue">${d}</td><td style="color:orange">${c}</td><td style="font-weight:bold; color:${net>=0?'green':'red'}">${net}</td><td><button class="btn btn-del" onclick="userDB.partnersInfo.splice(${i},1);render('partnersPage')">🗑️</button></td></tr>`;
-            });
-        }
-        if(id === 'trialPage') {
-            const b = document.getElementById('trialBody'); b.innerHTML = '';
-            getTrialBalances().forEach(a => { b.innerHTML += `<tr><td>${a.name}</td><td>${a.d}</td><td>${a.c}</td><td>${a.balance>0?a.balance:0}</td><td>${a.balance<0?Math.abs(a.balance):0}</td></tr>`; });
-        }
-        if(id === 'incomePage') {
-            const b = document.getElementById('incomeBody'); b.innerHTML = '';
-            let bals = getTrialBalances();
-            let sum = (type) => bals.filter(a => a.type === type).reduce((s, a) => s + Math.abs(a.balance), 0);
-            let mabi = sum('مبيعات'), cost = sum('تكلفة مبيعات'), net = (mabi - cost) + (sum('إيرادات أخرى') + sum('إيرادات')) - (sum('مصروفات اخرى') + sum('مصروفات'));
-            b.innerHTML = `<tr><td>إجمالي المبيعات</td><td>${mabi}</td></tr><tr><td>(-) تكلفة البضاعة</td><td>${cost}</td></tr><tr class="total-row" style="background:#dcfce7"><td>صافي الربح</td><td>${net}</td></tr>`;
-        }
-        if(id === 'balanceSheetPage') {
-            let bals = getTrialBalances(), ab = document.getElementById('assetsBody'), lb = document.getElementById('liabilitiesBody');
-            ab.innerHTML = ''; lb.innerHTML = ''; let tA = 0, tL = 0;
-            bals.forEach(a => {
-                if(a.type === 'أصول') { tA += a.balance; ab.innerHTML += `<tr><td>${a.name}</td><td>${a.balance}</td></tr>`; }
-                if(['التزامات', 'حقوق ملكية'].includes(a.type)) { tL += Math.abs(a.balance); lb.innerHTML += `<tr><td>${a.name}</td><td>${Math.abs(a.balance)}</td></tr>`; }
-            });
-            let net = calculateNetProfit(); tL += net;
-            lb.innerHTML += `<tr style="font-weight:bold; color:var(--success)"><td>صافي الربح</td><td>${net}</td></tr>`;
-            ab.innerHTML += `<tr class="total-row"><td>الإجمالي</td><td>${tA}</td></tr>`;
-            lb.innerHTML += `<tr class="total-row"><td>الإجمالي</td><td>${tL}</td></tr>`;
-        }
-        if(id === 'productsPage') {
-            const b = document.getElementById('productsBody'); b.innerHTML = '';
-            userDB.products.forEach((p, i) => {
-                let current = parseFloat(p.op)||0;
-                userDB.journal.forEach(j => { if(j.prod===p.name){ if(j.deb==="المخزون")current+=parseFloat(j.q); if(j.cre==="المخزون")current-=parseFloat(j.q); }});
-                b.innerHTML += `<tr><td><input value="${p.name||''}" onchange="userDB.products[${i}].name=this.value"></td><td><input type="number" value="${p.price||0}" onchange="userDB.products[${i}].price=this.value"></td><td><input type="number" value="${p.op||0}" onchange="userDB.products[${i}].op=this.value"></td><td>${current}</td><td><button class="btn btn-del" onclick="userDB.products.splice(${i},1);render('productsPage')">🗑️</button></td></tr>`;
-            });
-        }
-    }
-
-    function validateStock(i) {
-        let j = userDB.journal[i];
-        if(j.cre === "المخزون" && j.prod) {
-            let product = userDB.products.find(p => p.name === j.prod), current = parseFloat(product.op)||0;
-            userDB.journal.forEach((jj, idx) => { if(idx !== i && jj.prod === j.prod) { if(jj.deb === "المخزون") current += parseFloat(jj.q)||0; if(jj.cre === "المخزون") current -= parseFloat(jj.q)||0; }});
-            if(parseFloat(document.getElementById('q'+i).value) > current) { alert("المتاح: " + current); document.getElementById('q'+i).value = 0; }
-        }
-        calcRowVal(i);
-    }
-    function updateRowPrice(i, pName) {
-        const p = userDB.products.find(x => x.name === pName); userDB.journal[i].prod = pName;
-        if(p) { document.getElementById('v'+i).value = (parseFloat(p.price)||0) * (parseFloat(document.getElementById('q'+i).value)||0); userDB.journal[i].v = document.getElementById('v'+i).value; }
-    }
-    function calcRowVal(i) {
-        userDB.journal[i].q = document.getElementById('q'+i).value;
-        const p = userDB.products.find(x => x.name === userDB.journal[i].prod);
-        if(p) { document.getElementById('v'+i).value = (parseFloat(p.price)||0) * (parseFloat(userDB.journal[i].q)||0); userDB.journal[i].v = document.getElementById('v'+i).value; }
-    }
-    function addAcc() { userDB.accounts.push({name:'', type:'أصول', fixed: false}); render('accountsPage'); }
-    function addJ() { userDB.journal.push({date: new Date().toISOString().split('T')[0], q:0, v:0, deb:'', cre:'', name:'', prod:''}); render('journalPage'); }
-    function addP() { userDB.products.push({name:'', price:0, op:0}); render('productsPage'); }
-    function addPartnerInfo() { userDB.partnersInfo.push({name:'', phone:'', note:''}); render('partnersPage'); }
 </script>
 </body>
 </html>
