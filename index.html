@@ -20,7 +20,8 @@
         .btn-save { background: var(--success); color: white; }
         .btn-del { background: var(--danger); color: white; }
         .btn-add { background: var(--main); color: white; margin-bottom: 15px; }
-        .btn-print { background: #64748b; color: white; margin-bottom: 15px; margin-right: 5px; }
+        .btn-ins { background: var(--success); color: white; padding: 5px 8px; font-size: 12px; margin-left: 4px; }
+        .btn-print { background: #64748b; color: white; margin-bottom: 15px; margin-right: 10px; }
         .nav-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; padding: 20px; }
         .card { background: white; padding: 25px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid #e2e8f0; transition: 0.3s; }
         .card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
@@ -31,13 +32,16 @@
         #loader { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; justify-content:center; align-items:center; flex-direction:column; }
         .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .total-row { background: #f8fafc; font-weight: bold; }
-        .btn-ins { background: #e2e8f0; color: #1e293b; padding: 5px 10px; font-size: 12px; }
+        .print-header { display: none; text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        
         @media print {
-            .btn, header, .nav-menu, button { display: none !important; }
-            .page { display: block !important; padding: 0; }
-            .table-container { box-shadow: none; border: none; }
-            table { font-size: 12px; }
-            input, select { border: none; background: transparent; }
+            .btn, .btn-add, .btn-print, .btn-ins, .btn-del, header, .nav-menu { display: none !important; }
+            .page { display: block !important; }
+            .table-container { box-shadow: none; padding: 0; }
+            .print-header { display: block !important; }
+            table { width: 100% !important; border: 1px solid #000; }
+            th, td { border: 1px solid #000 !important; color: black !important; }
+            input, select { border: none !important; background: transparent !important; color: black !important; -webkit-appearance: none; }
         }
     </style>
 </head>
@@ -54,6 +58,7 @@
     <p style="font-size: 11px; color: var(--danger); margin-bottom: 10px;">* كلمة المرور يجب أن لا تقل عن 6 أحرف أو أرقام</p>
     <button class="btn btn-save" style="width:100%" onclick="processAuth()">دخول</button>
 </div>
+
 <div id="appScreen" style="display:none;">
     <header>
         <div style="display:flex; align-items:center; gap:12px;"><div class="logo-img">📉</div><h2 style="margin:0">المحاسب</h2></div>
@@ -63,6 +68,7 @@
             <button class="btn btn-del" onclick="logout()">خروج</button>
         </div>
     </header>
+
     <div id="homePage" class="page active">
         <div class="nav-menu">
             <div class="card" onclick="openPage('accountsPage')"><h3>📁 الحسابات</h3></div>
@@ -72,46 +78,67 @@
             <div class="card" onclick="openPage('trialPage')"><h3>⚖️ الميزان</h3></div>
             <div class="card" onclick="openPage('incomePage')" style="background: #f0fdf4;"><h3>📊 قائمة الدخل</h3></div>
             <div class="card" onclick="openPage('balanceSheetPage')" style="background: #eff6ff;"><h3>🏦 المركز المالي</h3></div>
+            <div class="card" onclick="openPage('guidePage')" style="background: #fffbeb; border: 1px dashed #f59e0b;"><h3>📖 دليل الاستخدام</h3></div>
         </div>
         <div style="text-align:center; color:#94a3b8; font-size:12px; margin-top:20px;">إعداد : أ مايكل ماهر</div>
     </div>
-    
+
+    <div class="print-header">
+        <h1 style="margin:0;">المحاسب</h1>
+        <p style="margin:5px 0 0; font-size: 14px;">إعداد أ / مايكل ماهر</p>
+    </div>
+
     <div id="accountsPage" class="page">
         <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
         <button class="btn btn-print" onclick="window.print()">🖨 طباعة PDF</button>
-        <div class="table-container"><h3>📁 دليل الحسابات</h3><button class="btn btn-add" onclick="addAcc()">+ حساب جديد</button>
-        <table><thead><tr><th>اسم الحساب</th><th>النوع</th><th>إجراء</th></tr></thead><tbody id="accountsBody"></tbody></table></div>
+        <div class="table-container"><h3>دليل الحسابات</h3><button class="btn btn-add" onclick="addAcc()">+ حساب جديد</button><table><thead><tr><th>اسم الحساب</th><th>النوع</th><th>إجراء</th></tr></thead><tbody id="accountsBody"></tbody></table></div>
     </div>
 
     <div id="journalPage" class="page">
         <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
         <button class="btn btn-print" onclick="window.print()">🖨 طباعة PDF</button>
-        <div class="table-container"><h3>📓 دفتر اليومية</h3><button class="btn btn-add" onclick="addJ()">+ قيد جديد</button>
-        <table><thead><tr><th>التاريخ</th><th>مدين</th><th>دائن</th><th>الاسم</th><th>الصنف</th><th>الكمية</th><th>المبلغ</th><th>إجراء</th></tr></thead><tbody id="journalBody"></tbody></table></div>
+        <div class="table-container"><button class="btn btn-add" onclick="addJ()">+ قيد جديد</button><table><thead><tr><th>التاريخ</th><th>مدين</th><th>دائن</th><th>الاسم</th><th>الصنف</th><th>الكمية</th><th>المبلغ</th><th>إجراء</th></tr></thead><tbody id="journalBody"></tbody></table></div>
     </div>
 
     <div id="productsPage" class="page">
         <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
         <button class="btn btn-print" onclick="window.print()">🖨 طباعة PDF</button>
-        <div class="table-container"><h3>📦 إدارة المخزن</h3><button class="btn btn-add" onclick="addP()">+ صنف جديد</button>
-        <table><thead><tr><th>الصنف</th><th>السعر</th><th>وارد</th><th>منصرف</th><th>الرصيد الصافي</th><th>إجراء</th></tr></thead><tbody id="productsBody"></tbody></table></div>
+        <div class="table-container"><h3>📦 إدارة المخزن</h3><button class="btn btn-add" onclick="addP()">+ صنف جديد</button><table><thead><tr><th>الصنف</th><th>السعر</th><th>وارد</th><th>منصرف</th><th>الرصيد الصافي</th><th>إجراء</th></tr></thead><tbody id="productsBody"></tbody></table></div>
     </div>
 
     <div id="partnersPage" class="page">
         <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
         <button class="btn btn-print" onclick="window.print()">🖨 طباعة PDF</button>
-        <div class="table-container"><h3>🤝 دليل المتعاملين</h3><button class="btn btn-add" onclick="addPartnerInfo()">+ إضافة بيانات متعامل</button>
-        <table><thead><tr><th>الاسم</th><th>الهاتف</th><th>ملاحظات</th><th>مدين (+)</th><th>دائن (-)</th><th>الصافي</th><th>إجراء</th></tr></thead><tbody id="partnersBody"></tbody></table></div>
+        <div class="table-container"><h3>دليل المتعاملين والديون</h3><button class="btn btn-add" onclick="addPartnerInfo()">+ إضافة بيانات متعامل</button><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>ملاحظات</th><th>مدين (+)</th><th>دائن (-)</th><th>الصافي</th><th>إجراء</th></tr></thead><tbody id="partnersBody"></tbody></table></div>
     </div>
 
-    <div id="trialPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><button class="btn btn-print" onclick="window.print()">🖨 طباعة</button>
-    <div class="table-container"><table><thead><tr><th>الحساب</th><th>مدين</th><th>دائن</th><th>رصيد م</th><th>رصيد د</th></tr></thead><tbody id="trialBody"></tbody></table></div></div>
+    <div id="trialPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><table><thead><tr><th>الحساب</th><th>مدين</th><th>دائن</th><th>رصيد م</th><th>رصيد د</th></tr></thead><tbody id="trialBody"></tbody></table></div></div>
     
-    <div id="incomePage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><button class="btn btn-print" onclick="window.print()">🖨 طباعة PDF</button>
-    <div class="table-container"><h2 style="text-align: center;">📊 قائمة الدخل</h2><table><tbody id="incomeBody"></tbody></table></div></div>
-    
-    <div id="balanceSheetPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><button class="btn btn-print" onclick="window.print()">🖨 طباعة PDF</button>
-    <div class="report-grid"><div class="table-container"><h3>الأصول</h3><table><thead><tr><th>الحساب</th><th>المبلغ</th></tr></thead><tbody id="assetsBody"></tbody></table></div><div class="table-container"><h3>الالتزامات وحقوق الملكية</h3><table><thead><tr><th>الحساب</th><th>المبلغ</th></tr></thead><tbody id="liabilitiesBody"></tbody></table></div></div></div>
+    <div id="incomePage" class="page">
+        <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
+        <button class="btn btn-print" onclick="window.print()">🖨 طباعة PDF</button>
+        <div class="table-container"><h2 style="text-align: center;">📊 قائمة الدخل</h2><table><tbody id="incomeBody"></tbody></table></div>
+    </div>
+
+    <div id="balanceSheetPage" class="page">
+        <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
+        <button class="btn btn-print" onclick="window.print()">🖨 طباعة PDF</button>
+        <div class="report-grid"><div class="table-container"><h3>الأصول</h3><table><thead><tr><th>الحساب</th><th>المبلغ</th></tr></thead><tbody id="assetsBody"></tbody></table></div><div class="table-container"><h3>الالتزامات وحقوق الملكية</h3><table><thead><tr><th>الحساب</th><th>المبلغ</th></tr></thead><tbody id="liabilitiesBody"></tbody></table></div></div>
+    </div>
+
+    <div id="guidePage" class="page">
+        <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
+        <div class="table-container">
+            <h2 style="text-align: center; color: var(--accent);">📖 ملاحظات هامة ودليل الاستخدام</h2>
+            <div class="info-box" style="border-right-color: var(--danger); background: #fff1f2;">
+                <ul>
+                    <li>🚩 لا يمكن استرجاع بيانات الحساب من اسم المستخدم او كلمة المرور حال نسيانهم.</li>
+                    <li>📊 قيود اليومية تعمل بنظام الجرد المستمر، تذكر إثبات تكلفة البضاعة يدوياً عند البيع.</li>
+                    <li>💾 بعد الانتهاء من إدخال بياناتك اضغط حفظ البيانات لكي تجدها عند الدخول مرة أخرى.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 </div>
 
 <datalist id="accList"></datalist>
@@ -123,41 +150,74 @@
         document.body.innerHTML = '<div style="direction:rtl;text-align:center;padding:50px;font-family:sans-serif;"><h2>⚠️ نسخة غير مرخصة</h2></div>';
         window.stop();
     }
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    const config = { apiKey: "AIzaSyBP7HP1w4MbOFZWnv7BdpKwDlYjv4VJUTM", authDomain: "accountsite26.firebaseapp.com", databaseURL: "https://accountsite26-default-rtdb.firebaseio.com", projectId: "accountsite26", storageBucket: "accountsite26.firebasestorage.app", messagingSenderId: "1015795938039", appId: "1:1015795938039:web:b625e24fca2c5b231d19f2" };
-    const app = initializeApp(config); const db = getDatabase(app); const auth = getAuth(app);
-    window.switchAuth = (isLogin) => { document.getElementById('loginTab').classList.toggle('active', isLogin); document.getElementById('registerTab').classList.toggle('active', !isLogin); document.querySelector('.auth-box .btn-save').innerText = isLogin ? 'دخول' : 'إنشاء حساب جديد'; };
+
+    const config = {
+        apiKey: "AIzaSyBP7HP1w4MbOFZWnv7BdpKwDlYjv4VJUTM",
+        authDomain: "accountsite26.firebaseapp.com",
+        databaseURL: "https://accountsite26-default-rtdb.firebaseio.com",
+        projectId: "accountsite26",
+        storageBucket: "accountsite26.firebasestorage.app",
+        messagingSenderId: "1015795938039",
+        appId: "1:1015795938039:web:b625e24fca2c5b231d19f2"
+    };
+
+    const app = initializeApp(config);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
+
+    window.switchAuth = (isLogin) => {
+        document.getElementById('loginTab').classList.toggle('active', isLogin);
+        document.getElementById('registerTab').classList.toggle('active', !isLogin);
+        document.querySelector('.auth-box .btn-save').innerText = isLogin ? 'دخول' : 'إنشاء حساب جديد';
+    };
+
     window.processAuth = async () => {
-        const u = document.getElementById('username').value.trim(); const p = document.getElementById('password').value.trim();
+        const u = document.getElementById('username').value.trim();
+        const p = document.getElementById('password').value.trim();
         const isLogin = document.getElementById('loginTab').classList.contains('active');
         if(!u || !p) return alert("⚠️ يرجى إدخال اسم المستخدم وكلمة المرور");
-        localStorage.setItem('user_display_name', u); document.getElementById('loader').style.display = 'flex';
+        localStorage.setItem('user_display_name', u); 
+        document.getElementById('loader').style.display = 'flex';
         const safeUser = btoa(unescape(encodeURIComponent(u))).replace(/[/+=]/g, "").toLowerCase().substring(0, 15);
         const email = safeUser + "@maher-system.com";
-        try { if (isLogin) { await signInWithEmailAndPassword(auth, email, p); } else { await createUserWithEmailAndPassword(auth, email, p); alert("✅ تم التسجيل بنجاح"); } } catch (e) { alert("خطأ في البيانات"); document.getElementById('loader').style.display = 'none'; }
+        try {
+            if (isLogin) { await signInWithEmailAndPassword(auth, email, p); } 
+            else { await createUserWithEmailAndPassword(auth, email, p); alert("✅ تم التسجيل بنجاح"); }
+        } catch (e) {
+            alert("حدث خطأ في البيانات أو المستخدم موجود بالفعل");
+            document.getElementById('loader').style.display = 'none';
+        }
     };
+
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            window.currentUser = localStorage.getItem('user_display_name') || user.email.split('@')[0];
+            const savedName = localStorage.getItem('user_display_name');
+            window.currentUser = savedName || user.email.split('@')[0];
             const snapshot = await get(ref(db, `users/${user.uid}/data`));
             const data = snapshot.exists() ? snapshot.val() : {};
             window.userDB = { accounts: data.accounts || [], journal: data.journal || [], products: data.products || [], partnersInfo: data.partnersInfo || [] };
             startApp();
         }
     });
+
     window.syncToCloud = async () => {
-        if(!auth.currentUser) return; document.getElementById('loader').style.display = 'flex';
-        try { await set(ref(db, `users/${auth.currentUser.uid}/data`), window.userDB); alert("✅ تم الحفظ"); } catch (e) { alert("❌ فشل"); }
+        if(!auth.currentUser) return;
+        document.getElementById('loader').style.display = 'flex';
+        try { await set(ref(db, `users/${auth.currentUser.uid}/data`), window.userDB); alert("✅ تم الحفظ بنجاح"); } 
+        catch (e) { alert("❌ فشل الحفظ"); }
         document.getElementById('loader').style.display = 'none';
     };
+
     window.logout = () => { signOut(auth).then(() => location.reload()); };
 </script>
 
 <script>
     (function(){
-        // حذف إيرادات أخرى ومصروفات أخرى من القائمة
+        // حذف إيرادات أخرى ومصروفات أخرى من النوع
         const _0xK3 = ["أصول", "التزامات", "حقوق ملكية", "مبيعات", "تكلفة مبيعات", "مصروفات", "إيرادات", "مخزون", "مدينون", "دائنون", "غير ذلك"];
 
         window.startApp = function() {
@@ -189,7 +249,10 @@
                 if(accs[j.cre]) accs[j.cre].c += parseFloat(j.v) || 0;
             });
             let res = [];
-            for(let n in accs) { let bal = accs[n].d - accs[n].c; res.push({ name: n, type: accs[n].type, balance: bal, d: accs[n].d, c: accs[n].c }); }
+            for(let n in accs) {
+                let bal = accs[n].d - accs[n].c;
+                res.push({ name: n, type: accs[n].type, balance: bal, d: accs[n].d, c: accs[n].c });
+            }
             return res;
         };
 
@@ -199,36 +262,46 @@
             return (s('مبيعات') - s('تكلفة مبيعات')) + s('إيرادات') - s('مصروفات');
         };
 
+        // دالة الإدراج في أي مكان
+        window.insertAt = function(target, index) {
+            if(target === 'accounts') userDB.accounts.splice(index + 1, 0, {name:'', type:'أصول'});
+            if(target === 'journal') userDB.journal.splice(index + 1, 0, {date: new Date().toISOString().split('T')[0], q:0, v:0, deb:'', cre:'', name:'', prod:''});
+            if(target === 'products') userDB.products.splice(index + 1, 0, {name:'', price:0});
+            if(target === 'partners') userDB.partnersInfo.splice(index + 1, 0, {name:'', phone:'', note:''});
+            render(document.querySelector('.page.active').id);
+        };
+
         window.render = function(id) {
             if(id === 'accountsPage') {
                 const b = document.getElementById('accountsBody'); b.innerHTML = '';
                 userDB.accounts.forEach((a, i) => {
                     let o = _0xK3.map(t => `<option ${a.type==t?'selected':''}>${t}</option>`).join('');
-                    b.innerHTML += `<tr><td><input value="${a.name}" onchange="userDB.accounts[${i}].name=this.value;updateDatalists()"></td><td><select onchange="userDB.accounts[${i}].type=this.value">${o}</select></td><td><button class="btn btn-ins" onclick="insRow('acc', ${i})">➕</button> <button class="btn btn-del" onclick="userDB.accounts.splice(${i},1);render('accountsPage')">🗑️</button></td></tr>`;
+                    b.innerHTML += `<tr><td><input value="${a.name}" onchange="userDB.accounts[${i}].name=this.value;updateDatalists()"></td><td><select onchange="userDB.accounts[${i}].type=this.value">${o}</select></td><td><button class="btn btn-ins" onclick="insertAt('accounts', ${i})">➕</button><button class="btn btn-del" onclick="userDB.accounts.splice(${i},1);render('accountsPage')">🗑️</button></td></tr>`;
                 });
             }
             if(id === 'journalPage') {
                 const b = document.getElementById('journalBody'); b.innerHTML = '';
                 userDB.journal.forEach((j, i) => {
                     let pO = `<option value="">-- صنف --</option>` + userDB.products.map(p => `<option value="${p.name}" ${j.prod===p.name?'selected':''}>${p.name}</option>`).join('');
-                    b.innerHTML += `<tr><td><input type="date" value="${j.date||''}" onchange="userDB.journal[${i}].date=this.value"></td><td><input list="accList" value="${j.deb||''}" onchange="userDB.journal[${i}].deb=this.value"></td><td><input list="accList" value="${j.cre||''}" onchange="checkSalesAcc(${i}, this.value)"></td><td><input list="partnerList" value="${j.name||''}" onchange="userDB.journal[${i}].name=this.value"></td><td><select onchange="updateRowPrice(${i}, this.value)">${pO}</select></td><td><input type="number" id="q${i}" value="${j.q||0}" oninput="validateStock(${i})"></td><td><input type="number" id="v${i}" value="${j.v||0}" oninput="handleValChange(${i}, this.value)"></td><td><button class="btn btn-ins" onclick="insRow('jou', ${i})">➕</button> <button class="btn btn-del" onclick="userDB.journal.splice(${i},1);render('journalPage')">🗑️</button></td></tr>`;
-                });
-            }
-            if(id === 'productsPage') {
-                const b = document.getElementById('productsBody'); b.innerHTML = '';
-                userDB.products.forEach((p, i) => {
-                    let win = 0, out = 0;
-                    userDB.journal.forEach(j => { if(j.prod === p.name){ let dAcc = userDB.accounts.find(a => a.name === j.deb); let cAcc = userDB.accounts.find(a => a.name === j.cre); if(dAcc && dAcc.type === "مخزون") win += parseFloat(j.q) || 0; if(cAcc && cAcc.type === "مخزون") out += parseFloat(j.q) || 0; } });
-                    b.innerHTML += `<tr><td><input value="${p.name||''}" onchange="userDB.products[${i}].name=this.value"></td><td><input type="number" value="${p.price||0}" onchange="userDB.products[${i}].price=this.value"></td><td>${win}</td><td>${out}</td><td style="font-weight:bold">${win - out}</td><td><button class="btn btn-ins" onclick="insRow('pro', ${i})">➕</button> <button class="btn btn-del" onclick="userDB.products.splice(${i},1);render('productsPage')">🗑️</button></td></tr>`;
+                    b.innerHTML += `<tr><td><input type="date" value="${j.date||''}" onchange="userDB.journal[${i}].date=this.value"></td><td><input list="accList" value="${j.deb||''}" onchange="userDB.journal[${i}].deb=this.value"></td><td><input list="accList" value="${j.cre||''}" onchange="handleCreChange(${i}, this.value)"></td><td><input list="partnerList" value="${j.name||''}" onchange="userDB.journal[${i}].name=this.value"></td><td><select onchange="updateRowPrice(${i}, this.value)">${pO}</select></td><td><input type="number" id="q${i}" value="${j.q||0}" oninput="validateStock(${i})"></td><td><input type="number" id="v${i}" value="${j.v||0}" oninput="userDB.journal[${i}].v=this.value"></td><td><button class="btn btn-ins" onclick="insertAt('journal', ${i})">➕</button><button class="btn btn-del" onclick="userDB.journal.splice(${i},1);render('journalPage')">🗑️</button></td></tr>`;
                 });
             }
             if(id === 'partnersPage') {
                 const b = document.getElementById('partnersBody'); b.innerHTML = '';
                 let pC = {};
-                userDB.journal.forEach(j => { if(j.name) { let n = j.name.trim(); if(!pC[n]) pC[n] = { d: 0, c: 0 }; let v = parseFloat(j.v) || 0; let dAcc = userDB.accounts.find(a => a.name === j.deb); let cAcc = userDB.accounts.find(a => a.name === j.cre); if(dAcc && ["مدينون", "دائنون"].includes(dAcc.type)) pC[n].d += v; if(cAcc && ["مدينون", "دائنون"].includes(cAcc.type)) pC[n].c += v; } });
+                userDB.journal.forEach(j => {
+                    if(j.name) {
+                        let n = j.name.trim(); if(!pC[n]) pC[n] = { d: 0, c: 0 };
+                        let v = parseFloat(j.v) || 0;
+                        let debAcc = userDB.accounts.find(a => a.name === j.deb);
+                        let creAcc = userDB.accounts.find(a => a.name === j.cre);
+                        if(debAcc && ["مدينون", "دائنون"].includes(debAcc.type)) pC[n].d += v;
+                        if(creAcc && ["مدينون", "دائنون"].includes(creAcc.type)) pC[n].c += v;
+                    }
+                });
                 userDB.partnersInfo.forEach((p, i) => {
                     let d = pC[p.name] ? pC[p.name].d : 0, c = pC[p.name] ? pC[p.name].c : 0, net = d - c;
-                    b.innerHTML += `<tr><td><input value="${p.name}" onchange="userDB.partnersInfo[${i}].name=this.value;updateDatalists()"></td><td><input value="${p.phone||''}" onchange="userDB.partnersInfo[${i}].phone=this.value"></td><td><input value="${p.note||''}" onchange="userDB.partnersInfo[${i}].note=this.value"></td><td style="color:blue">${d}</td><td style="color:orange">${c}</td><td style="font-weight:bold; color:${net>=0?'green':'red'}">${net}</td><td><button class="btn btn-ins" onclick="insRow('par', ${i})">➕</button> <button class="btn btn-del" onclick="userDB.partnersInfo.splice(${i},1);render('partnersPage')">🗑️</button></td></tr>`;
+                    b.innerHTML += `<tr><td><input value="${p.name}" onchange="userDB.partnersInfo[${i}].name=this.value;updateDatalists()"></td><td><input value="${p.phone||''}" onchange="userDB.partnersInfo[${i}].phone=this.value"></td><td><input value="${p.note||''}" onchange="userDB.partnersInfo[${i}].note=this.value"></td><td style="color:blue">${d}</td><td style="color:orange">${c}</td><td style="font-weight:bold; color:${net>=0?'green':'red'}">${net}</td><td><button class="btn btn-ins" onclick="insertAt('partners', ${i})">➕</button><button class="btn btn-del" onclick="userDB.partnersInfo.splice(${i},1);render('partnersPage')">🗑️</button></td></tr>`;
                 });
             }
             if(id === 'trialPage') {
@@ -237,70 +310,84 @@
             }
             if(id === 'incomePage') {
                 const b = document.getElementById('incomeBody'); b.innerHTML = '';
-                let bl = getTrialBalances(), sm = (t) => bl.filter(a => a.type === t).reduce((s, a) => s + Math.abs(a.balance), 0);
-                let m = sm('مبيعات'), c = sm('تكلفة مبيعات'), r = m - c, oI = sm('إيرادات'), oE = sm('مصروفات'), n = r + oI - oE;
-                let c_res = n >= 0 ? "#dcfce7" : "#fee2e2";
-                b.innerHTML = `<tr><td>إجمالي المبيعات</td><td>${m}</td></tr><tr><td>(-) تكلفة البضاعة</td><td>${c}</td></tr><tr class="total-row"><td>مجمل الربح</td><td>${r}</td></tr><tr><td>(+) إيرادات</td><td>${oI}</td></tr><tr><td>(-) مصروفات</td><td>${oE}</td></tr><tr class="total-row" style="background:${c_res}; color:${n<0?'red':'black'}"><td>${n>=0?'صافي الربح':'صافي الخسارة'}</td><td>${n}</td></tr>`;
+                let bl = getTrialBalances();
+                let sm = (t) => bl.filter(a => a.type === t).reduce((s, a) => s + Math.abs(a.balance), 0);
+                let m = sm('مبيعات'), c = sm('تكلفة مبيعات'), r = m - c, oR = sm('إيرادات'), oE = sm('مصروفات'), n = r + oR - oE;
+                let resText = n >= 0 ? "صافي الربح" : "صافي الخسارة";
+                let resColor = n >= 0 ? "#dcfce7" : "#fee2e2";
+                let textColor = n >= 0 ? "black" : "red";
+                b.innerHTML = `<tr><td>إجمالي المبيعات</td><td>${m}</td></tr><tr><td>(-) تكلفة البضاعة</td><td>${c}</td></tr><tr class="total-row"><td>مجمل الربح</td><td>${r}</td></tr><tr><td>(+) إيرادات</td><td>${oR}</td></tr><tr><td>(-) مصروفات</td><td>${oE}</td></tr><tr class="total-row" style="background:${resColor}; color:${textColor}"><td>${resText}</td><td>${n}</td></tr>`;
             }
             if(id === 'balanceSheetPage') {
                 let bl = getTrialBalances(), ab = document.getElementById('assetsBody'), lb = document.getElementById('liabilitiesBody');
                 ab.innerHTML = ''; lb.innerHTML = ''; let tA = 0, tL = 0;
                 bl.forEach(a => {
-                    if((['أصول', 'مخزون', 'مدينون'].includes(a.type)) && a.balance > 0) { tA += a.balance; ab.innerHTML += `<tr><td>${a.name}</td><td>${a.balance}</td></tr>`; }
-                    if((['التزامات', 'حقوق ملكية', 'دائنون'].includes(a.type)) && a.balance < 0) { tL += Math.abs(a.balance); lb.innerHTML += `<tr><td>${a.name}</td><td>${Math.abs(a.balance)}</td></tr>`; }
+                    if((['أصول', 'مخزون', 'مدينون'].includes(a.type)) && a.balance > 0) { let v = a.balance; tA += v; ab.innerHTML += `<tr><td>${a.name}</td><td>${v}</td></tr>`; }
+                    if((['التزامات', 'حقوق ملكية', 'دائنون'].includes(a.type)) && a.balance < 0) { let v = Math.abs(a.balance); tL += v; lb.innerHTML += `<tr><td>${a.name}</td><td>${v}</td></tr>`; }
                 });
                 let nt = calculateNetProfit(); tL += nt;
-                lb.innerHTML += `<tr style="font-weight:bold; color:${nt<0?'red':'green'}"><td>${nt>=0?'صافي الربح':'صافي الخسارة'}</td><td>${nt}</td></tr><tr class="total-row"><td>الإجمالي</td><td>${tA}</td></tr>`;
+                let resText = nt >= 0 ? "صافي الربح" : "صافي الخسارة";
+                let textColor = nt >= 0 ? "var(--success)" : "var(--danger)";
+                lb.innerHTML += `<tr style="background:#f0fdf4; font-weight:bold; color:${textColor}"><td>${resText}</td><td>${nt}</td></tr><tr class="total-row"><td>الإجمالي</td><td>${tA}</td></tr>`;
                 ab.innerHTML += `<tr class="total-row"><td>الإجمالي</td><td>${tA}</td></tr>`;
+                let totalLiabCell = document.querySelector('#liabilitiesBody tr:last-child td:last-child');
+                if(totalLiabCell) totalLiabCell.innerText = tL;
+            }
+            if(id === 'productsPage') {
+                const b = document.getElementById('productsBody'); b.innerHTML = '';
+                userDB.products.forEach((p, i) => {
+                    let win = 0, out = 0;
+                    userDB.journal.forEach(j => {
+                        if(j.prod === p.name){
+                            let debAcc = userDB.accounts.find(a => a.name === j.deb);
+                            let creAcc = userDB.accounts.find(a => a.name === j.cre);
+                            if(debAcc && debAcc.type === "مخزون") win += parseFloat(j.q) || 0;
+                            if(creAcc && creAcc.type === "مخزون") out += parseFloat(j.q) || 0;
+                        }
+                    });
+                    b.innerHTML += `<tr><td><input value="${p.name||''}" onchange="userDB.products[${i}].name=this.value"></td><td><input type="number" value="${p.price||0}" onchange="userDB.products[${i}].price=this.value"></td><td>${win}</td><td>${out}</td><td style="font-weight:bold">${win - out}</td><td><button class="btn btn-ins" onclick="insertAt('products', ${i})">➕</button><button class="btn btn-del" onclick="userDB.products.splice(${i},1);render('productsPage')">🗑️</button></td></tr>`;
+                });
             }
         };
 
-        window.checkSalesAcc = function(i, val) {
+        window.handleCreChange = function(i, val) {
             userDB.journal[i].cre = val;
-            let acc = userDB.accounts.find(a => a.name === val);
-            if(acc && acc.type === "مبيعات") userDB.journal[i]._isSales = true;
-            else userDB.journal[i]._isSales = false;
-        };
-
-        window.handleValChange = function(i, val) {
-            userDB.journal[i].v = val;
-            if(userDB.journal[i]._isSales && parseFloat(val) > 0) {
-                alert("🔔 تذكير: يرجى عمل قيد إثبات تكلفة البضاعة إلى حساب المخزون لهذا الصنف.");
+            let creAcc = userDB.accounts.find(a => a.name === val);
+            // التنبيه يظهر عند اختيار المبيعات مباشرة
+            if(creAcc && creAcc.type === "مبيعات") {
+                alert("🔔 تذكير: يرجى عمل قيد إثبات تكلفة البضاعة المباعة (من ح/ تكلفة مبيعات إلى ح/ المخزون).");
             }
-        };
-
-        window.insRow = function(type, i) {
-            if(type === 'acc') userDB.accounts.splice(i + 1, 0, {name:'', type:'أصول'});
-            if(type === 'jou') userDB.journal.splice(i + 1, 0, {date: new Date().toISOString().split('T')[0], q:0, v:0, deb:'', cre:'', name:'', prod:''});
-            if(type === 'pro') userDB.products.splice(i + 1, 0, {name:'', price:0});
-            if(type === 'par') userDB.partnersInfo.splice(i + 1, 0, {name:'', phone:'', note:''});
-            render(window.currentPageId || 'homePage');
         };
 
         window.validateStock = function(i) {
-            let j = userDB.journal[i], cAcc = userDB.accounts.find(a => a.name === j.cre);
-            if(cAcc && cAcc.type === "مخزون" && j.prod) {
-                let cur = 0; userDB.journal.forEach((jj, idx) => { if(idx !== i && jj.prod === j.prod) { let d = userDB.accounts.find(a => a.name === jj.deb), c = userDB.accounts.find(a => a.name === jj.cre); if(d && d.type === "مخزون") cur += parseFloat(jj.q)||0; if(c && c.type === "مخزون") cur -= parseFloat(jj.q)||0; } });
+            let j = userDB.journal[i];
+            let creAcc = userDB.accounts.find(a => a.name === j.cre);
+            if(creAcc && creAcc.type === "مخزون" && j.prod) {
+                let cur = 0;
+                userDB.journal.forEach((jj, idx) => {
+                    if(idx !== i && jj.prod === j.prod) {
+                        let dAcc = userDB.accounts.find(a => a.name === jj.deb);
+                        let cAcc = userDB.accounts.find(a => a.name === jj.cre);
+                        if(dAcc && dAcc.type === "مخزون") cur += parseFloat(jj.q)||0;
+                        if(cAcc && cAcc.type === "مخزون") cur -= parseFloat(jj.q)||0;
+                    }
+                });
                 if(parseFloat(document.getElementById('q'+i).value) > cur) { alert("المتاح: " + cur); document.getElementById('q'+i).value = 0; }
             }
-            userDB.journal[i].q = document.getElementById('q'+i).value;
-            updateRowPrice(i, userDB.journal[i].prod);
+            calcRowVal(i);
         };
 
         window.updateRowPrice = function(i, n) {
-            const p = userDB.products.find(x => x.name === n); userDB.journal[i].prod = n;
-            if(p) { let val = (parseFloat(p.price) || 0) * (parseFloat(userDB.journal[i].q) || 0); document.getElementById('v'+i).value = val; userDB.journal[i].v = val; }
+            const p = userDB.products.find(x => x.name === n);
+            userDB.journal[i].prod = n;
+            if(p) { document.getElementById('v'+i).value = (parseFloat(p.price) || 0) * (parseFloat(document.getElementById('q'+i).value) || 0); userDB.journal[i].v = document.getElementById('v'+i).value; }
+        };
+
+        window.calcRowVal = function(i) {
+            userDB.journal[i].q = document.getElementById('q'+i).value;
+            const p = userDB.products.find(x => x.name === userDB.journal[i].prod);
+            if(p) { document.getElementById('v'+i).value = (parseFloat(p.price) || 0) * (parseFloat(userDB.journal[i].q) || 0); userDB.journal[i].v = document.getElementById('v'+i).value; }
         };
 
         window.addAcc = () => { userDB.accounts.push({name:'', type:'أصول'}); render('accountsPage'); };
-        window.addJ = () => { userDB.journal.push({date: new Date().toISOString().split('T')[0], q:0, v:0, deb:'', cre:'', name:'', prod:''}); render('journalPage'); };
-        window.addP = () => { userDB.products.push({name:'', price:0}); render('productsPage'); };
-        window.addPartnerInfo = () => { userDB.partnersInfo.push({name:'', phone:'', note:''}); render('partnersPage'); };
-        
-        // تتبع الصفحة الحالية للإدراج
-        const op = window.openPage;
-        window.openPage = function(id) { window.currentPageId = id; op(id); };
-    })();
-</script>
-</body>
-</html>
+        window.addJ = () => { userDB.journal.push({date: new Date().toISOString().split
