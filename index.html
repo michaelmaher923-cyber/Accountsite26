@@ -93,14 +93,19 @@
 <datalist id="partnerList"></datalist>
 
 <script type="module">
-    // [Anti-Tamper & Security Obfuscation Layer]
-    const _0x4f2a=['bWljaGFlbG1haGVyOTIzLWN5YmVyLmdpdGh1Yi5pbw==','aW5pdGlhbGl6ZUFwcA==','Z2V0RGF0YWJhc2U=','Z2V0QXV0aA==','c2lnbkluV2l0aEVtYWlsQW5kUGFzc3dvcmQ=','Y3JlYXRlVXNlcldpdGhFbWFpbEFuZFBhc3N3b3Jk'];const _0x3b12=(_0x1b)=>atob(_0x1b);if(window['location']['hostname']!==_0x3b12(_0x4f2a[0])){document['body']['innerHTML']='<div style="direction:rtl;text-align:center;padding:50px;font-family:sans-serif;"><h2 style="color:red;">❌ خطأ في الترخيص</h2><p>هذا الكود مبرمج للعمل فقط على الرابط الرسمي الخاص بـ أ/ مايكل ماهر.</p></div>';throw new Error('Unauthorized');}
-    
-    import { initializeApp as _iA } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase as _gD, ref as _rf, set as _st, get as _gt } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    import { getAuth as _gA, signInWithEmailAndPassword as _sI, createUserWithEmailAndPassword as _cU, onAuthStateChanged as _oA, signOut as _sO } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    // 1. حماية الرابط الصارم
+    const _0xTarget = atob('bWljaGFlbG1haGVyOTIzLWN5YmVyLmdpdGh1Yi5pbw==');
+    if (window.location.hostname !== _0xTarget) {
+        document.body.innerHTML = '<div style="direction:rtl;text-align:center;padding:50px;font-family:sans-serif;"><h2>⚠️ نسخة غير مرخصة</h2><p>هذا النظام يعمل فقط على الرابط الرسمي للأستاذ مايكل ماهر.</p></div>';
+        window.stop();
+    }
 
-    const _fC = {
+    // 2. استيراد المكتبات
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const config = {
         apiKey: "AIzaSyBP7HP1w4MbOFZWnv7BdpKwDlYjv4VJUTM",
         authDomain: "accountsite26.firebaseapp.com",
         databaseURL: "https://accountsite26-default-rtdb.firebaseio.com",
@@ -110,39 +115,53 @@
         appId: "1:1015795938039:web:b625e24fca2c5b231d19f2"
     };
 
-    const _aP = _iA(_fC); const _dB = _gD(_aP); const _aT = _gA(_aP);
+    const app = initializeApp(config);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
 
-    window.processAuth = async () => {
-        const _u = document.getElementById('username').value.trim();
-        const _p = document.getElementById('password').value.trim();
-        const _iL = document.getElementById('loginTab').classList.contains('active');
-        if(!_u || !_p) return alert("أكمل البيانات");
-        if(_p.length < 6) return alert("كلمة المرور يجب أن تكون 6 أرقام على الأقل");
-        document.getElementById('loader').style.display = 'flex';
-        const _eM = _u.toLowerCase().replace(/[^a-z0-9]/g, "") + "@maher.com";
-        try { if (_iL) { await _sI(_aT, _eM, _p); } else { await _cU(_aT, _eM, _p); } } 
-        catch (e) { alert("خطأ في البيانات أو المستخدم موجود بالفعل"); document.getElementById('loader').style.display = 'none'; }
+    // 3. دالة التبديل (هذا ما كان ينقصك)
+    window.switchAuth = (isLogin) => {
+        document.getElementById('loginTab').classList.toggle('active', isLogin);
+        document.getElementById('registerTab').classList.toggle('active', !isLogin);
+        document.querySelector('.auth-box .btn-save').innerText = isLogin ? 'دخول' : 'إنشاء حساب جديد';
     };
 
-    _oA(_aT, async (_uR) => {
-        if (_uR) {
-            window.currentUser = _uR.email.split('@')[0];
-            const _sN = await _gt(_rf(_dB, `users/${_uR.uid}/data`));
-            const _dX = _sN.exists() ? _sN.val() : {};
-            window.userDB = { accounts: _dX.accounts || [], journal: _dX.journal || [], products: _dX.products || [], partnersInfo: _dX.partnersInfo || [] };
+    // 4. معالجة الدخول والتسجيل
+    window.processAuth = async () => {
+        const u = document.getElementById('username').value.trim();
+        const p = document.getElementById('password').value.trim();
+        const isLogin = document.getElementById('loginTab').classList.contains('active');
+        if(!u || !p) return alert("يرجى إدخال البيانات");
+        document.getElementById('loader').style.display = 'flex';
+        const email = u.toLowerCase().replace(/[^a-z0-9]/g, "") + "@maher.com";
+        try {
+            if (isLogin) { await signInWithEmailAndPassword(auth, email, p); } 
+            else { await createUserWithEmailAndPassword(auth, email, p); alert("تم إنشاء حسابك بنجاح!"); }
+        } catch (e) {
+            alert("خطأ: " + (isLogin ? "بيانات الدخول خاطئة" : "المستخدم موجود بالفعل أو كلمة المرور ضعيفة"));
+            document.getElementById('loader').style.display = 'none';
+        }
+    };
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            window.currentUser = user.email.split('@')[0];
+            const snapshot = await get(ref(db, `users/${user.uid}/data`));
+            const data = snapshot.exists() ? snapshot.val() : {};
+            window.userDB = { accounts: data.accounts || [], journal: data.journal || [], products: data.products || [], partnersInfo: data.partnersInfo || [] };
             initFixedAccounts(); startApp();
         }
     });
 
     window.syncToCloud = async () => {
-        if(!_aT.currentUser) return;
+        if(!auth.currentUser) return;
         document.getElementById('loader').style.display = 'flex';
-        try { await _st(_rf(_dB, `users/${_aT.currentUser.uid}/data`), window.userDB); alert("✅ تم الحفظ بنجاح"); } 
+        try { await set(ref(db, `users/${auth.currentUser.uid}/data`), window.userDB); alert("✅ تم الحفظ بنجاح"); } 
         catch (e) { alert("❌ فشل الحفظ"); }
         document.getElementById('loader').style.display = 'none';
     };
 
-    window.logout = () => { _sO(_aT).then(() => location.reload()); };
+    window.logout = () => { signOut(auth).then(() => location.reload()); };
 </script>
 
 <script>
