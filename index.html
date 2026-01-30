@@ -131,14 +131,41 @@
         const u = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value.trim();
         const isLogin = document.getElementById('loginTab').classList.contains('active');
-        if(!u || !p) return alert("يرجى إدخال البيانات");
+        
+        // التحقق من البيانات قبل الإرسال
+        if(!u || !p) return alert("⚠️ يرجى إدخال اسم المستخدم وكلمة المرور");
+        if(p.length < 6) return alert("⚠️ كلمة المرور يجب أن تكون 6 خانات (أرقام أو حروف) على الأقل");
+
         document.getElementById('loader').style.display = 'flex';
-        const email = u.toLowerCase().replace(/[^a-z0-9]/g, "") + "@maher.com";
+        
+        // تحويل اسم المستخدم لبريد إلكتروني صالح تقنياً (يدعم العربي والإنجليزي)
+        const safeUser = btoa(unescape(encodeURIComponent(u))).replace(/[/+=]/g, "").toLowerCase().substring(0, 15);
+        const email = safeUser + "@maher-system.com";
+
         try {
-            if (isLogin) { await signInWithEmailAndPassword(auth, email, p); } 
-            else { await createUserWithEmailAndPassword(auth, email, p); alert("تم إنشاء حسابك بنجاح!"); }
+            if (isLogin) { 
+                await signInWithEmailAndPassword(auth, email, p); 
+            } 
+            else { 
+                await createUserWithEmailAndPassword(auth, email, p); 
+                alert("✅ تم إنشاء حسابك بنجاح! جاري تحويلك للوحة التحكم...");
+            }
         } catch (e) {
-            alert("خطأ: " + (isLogin ? "بيانات الدخول خاطئة" : "المستخدم موجود بالفعل أو كلمة المرور ضعيفة"));
+            console.error("Firebase Error Code:", e.code);
+            let msg = "حدث خطأ غير متوقع";
+            
+            // شرح الأخطاء للمستخدم بالعربي
+            if (e.code === 'auth/email-already-in-use') {
+                msg = "❌ اسم المستخدم ده موجود قبل كدة، جرب اسم تاني";
+            } else if (e.code === 'auth/weak-password') {
+                msg = "❌ كلمة المرور ضعيفة، لازم تكون 6 أرقام أو حروف على الأقل";
+            } else if (e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found') {
+                msg = "❌ اسم المستخدم أو كلمة المرور غلط، تأكد من البيانات";
+            } else {
+                msg = "❌ خطأ: " + e.message;
+            }
+            
+            alert(msg);
             document.getElementById('loader').style.display = 'none';
         }
     };
