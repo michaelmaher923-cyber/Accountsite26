@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>المحاسب</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
-        :root { --main: #1e293b; --accent: #0284c7; --bg: #f8fafc; --white: #ffffff; --danger: #be123c; --success: #059669; }
+        :root { --main: #1e293b; --accent: #0284c7; --bg: #f8fafc; --white: #ffffff; --danger: #be123c; --success: #059669; --blue-soft: #f0f9ff; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; color: #334155; }
         header { background: var(--main); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
         .logo-img { width: 40px; height: 40px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
@@ -21,7 +22,12 @@
         .btn-del { background: var(--danger); color: white; }
         .btn-ins { background: var(--success); color: white; padding: 5px 10px; font-size: 12px; margin-left: 2px; }
         .btn-add { background: var(--main); color: white; margin-bottom: 15px; }
-        .btn-print { background: #64748b; color: white; margin-right: 10px; }
+        .btn-excel { background: #166534; color: white; margin-right: 5px; }
+        .btn-import { background: #ea580c; color: white; margin-right: 5px; }
+        .search-container { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
+        .search-input { width: 300px; padding: 8px; border: 2px solid var(--accent); border-radius: 6px; }
+        .highlight { background-color: #fef08a !important; transition: 0.3s; }
+        .trial-blue { background-color: var(--blue-soft) !important; }
         .nav-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; padding: 20px; }
         .card { background: white; padding: 25px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid #e2e8f0; transition: 0.3s; }
         .card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
@@ -32,21 +38,6 @@
         #loader { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; justify-content:center; align-items:center; flex-direction:column; }
         .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .total-row { background: #f8fafc; font-weight: bold; }
-        
-        .print-only { display: none; }
-
-        @media print {
-            .btn, .btn-add, .btn-print, .btn-ins, .btn-del, header, .nav-menu { display: none !important; }
-            .page { display: block !important; padding: 0 !important; }
-            .table-container { box-shadow: none !important; padding: 0 !important; }
-            .print-only { display: block !important; text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-            .print-only h1 { margin: 0; font-size: 28px; }
-            .print-only p { margin: 5px 0; font-size: 14px; }
-            table { width: 100% !important; border: 1px solid #000 !important; }
-            th, td { border: 1px solid #000 !important; color: #000 !important; }
-            input, select { border: none !important; appearance: none !important; -webkit-appearance: none !important; -moz-appearance: none !important; background: transparent !important; color: #000 !important; width: 100% !important; text-align: center !important; }
-            select::-ms-expand { display: none; }
-        }
     </style>
 </head>
 <body>
@@ -86,47 +77,85 @@
         <div style="text-align:center; color:#94a3b8; font-size:12px; margin-top:20px;">إعداد : أ مايكل ماهر</div>
     </div>
 
-    <div class="print-only">
-        <h1>المحاسب</h1>
-        <p>إعداد أ / مايكل ماهر</p>
-    </div>
-
     <div id="accountsPage" class="page">
         <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
-        <button class="btn btn-print" onclick="window.print()">🖨 طباعة PDF</button>
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="بحث في الحسابات..." oninput="tableSearch('accountsBody', this.value)">
+            <button class="btn btn-excel" onclick="exportData('accounts')">تصدير Excel</button>
+            <button class="btn btn-import" onclick="document.getElementById('fileAcc').click()">استيراد Excel</button>
+            <input type="file" id="fileAcc" hidden onchange="importData(this, 'accounts')" accept=".xlsx, .xls">
+        </div>
         <div class="table-container"><h3>دليل الحسابات</h3><button class="btn btn-add" onclick="addAcc()">+ حساب جديد</button><table><thead><tr><th>اسم الحساب</th><th>النوع</th><th>إجراء</th></tr></thead><tbody id="accountsBody"></tbody></table></div>
     </div>
 
     <div id="journalPage" class="page">
         <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
-        <button class="btn btn-print" onclick="window.print()">🖨 طباعة PDF</button>
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="بحث في اليومية..." oninput="tableSearch('journalBody', this.value)">
+            <button class="btn btn-excel" onclick="exportData('journal')">تصدير Excel</button>
+            <button class="btn btn-import" onclick="document.getElementById('fileJou').click()">استيراد Excel</button>
+            <input type="file" id="fileJou" hidden onchange="importData(this, 'journal')" accept=".xlsx, .xls">
+        </div>
         <div class="table-container"><button class="btn btn-add" onclick="addJ()">+ قيد جديد</button><table><thead><tr><th>التاريخ</th><th>مدين</th><th>دائن</th><th>الاسم</th><th>الصنف</th><th>الكمية</th><th>المبلغ</th><th>إجراء</th></tr></thead><tbody id="journalBody"></tbody></table></div>
     </div>
 
     <div id="productsPage" class="page">
         <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
-        <button class="btn btn-print" onclick="window.print()">🖨 طباعة PDF</button>
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="بحث في الأصناف..." oninput="tableSearch('productsBody', this.value)">
+            <button class="btn btn-excel" onclick="exportData('products')">تصدير Excel</button>
+            <button class="btn btn-import" onclick="document.getElementById('fileProd').click()">استيراد Excel</button>
+            <input type="file" id="fileProd" hidden onchange="importData(this, 'products')" accept=".xlsx, .xls">
+        </div>
         <div class="table-container"><h3>📦 إدارة المخزن</h3><button class="btn btn-add" onclick="addP()">+ صنف جديد</button><table><thead><tr><th>الصنف</th><th>السعر</th><th>وارد</th><th>منصرف</th><th>الرصيد الصافي</th><th>إجراء</th></tr></thead><tbody id="productsBody"></tbody></table></div>
     </div>
 
     <div id="partnersPage" class="page">
         <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
-        <button class="btn btn-print" onclick="window.print()">🖨 طباعة PDF</button>
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="بحث في المتعاملين..." oninput="tableSearch('partnersBody', this.value)">
+            <button class="btn btn-excel" onclick="exportData('partners')">تصدير Excel</button>
+            <button class="btn btn-import" onclick="document.getElementById('filePart').click()">استيراد Excel</button>
+            <input type="file" id="filePart" hidden onchange="importData(this, 'partners')" accept=".xlsx, .xls">
+        </div>
         <div class="table-container"><h3>دليل المتعاملين والديون</h3><button class="btn btn-add" onclick="addPartnerInfo()">+ إضافة بيانات متعامل</button><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>ملاحظات</th><th>مدين (+)</th><th>دائن (-)</th><th>الصافي</th><th>إجراء</th></tr></thead><tbody id="partnersBody"></tbody></table></div>
     </div>
 
-    <div id="trialPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><table><thead><tr><th>الحساب</th><th>مدين</th><th>دائن</th><th>رصيد م</th><th>رصيد د</th></tr></thead><tbody id="trialBody"></tbody></table></div></div>
+    <div id="trialPage" class="page">
+        <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="بحث في الميزان..." oninput="tableSearch('trialBody', this.value)">
+            <button class="btn btn-excel" onclick="exportTableToExcel('trialBody', 'ميزان_المراجعة')">تصدير Excel</button>
+        </div>
+        <div class="table-container"><table><thead><tr><th>الحساب</th><th>مدين</th><th>دائن</th><th>رصيد م</th><th>رصيد د</th></tr></thead><tbody id="trialBody"></tbody></table></div>
+    </div>
     
     <div id="incomePage" class="page">
         <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
-        <button class="btn btn-print" onclick="window.print()">🖨 طباعة PDF</button>
+        <div class="search-container">
+            <button class="btn btn-excel" onclick="exportTableToExcel('incomeBody', 'قائمة_الدخل')">تصدير Excel</button>
+        </div>
         <div class="table-container"><h2 style="text-align: center;">📊 قائمة الدخل</h2><table><tbody id="incomeBody"></tbody></table></div>
     </div>
 
     <div id="balanceSheetPage" class="page">
         <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
-        <button class="btn btn-print" onclick="window.print()">🖨 طباعة PDF</button>
+        <div class="search-container">
+            <button class="btn btn-excel" onclick="exportBalanceSheet()">تصدير Excel</button>
+        </div>
         <div class="report-grid"><div class="table-container"><h3>الأصول</h3><table><thead><tr><th>الحساب</th><th>المبلغ</th></tr></thead><tbody id="assetsBody"></tbody></table></div><div class="table-container"><h3>الالتزامات وحقوق الملكية</h3><table><thead><tr><th>الحساب</th><th>المبلغ</th></tr></thead><tbody id="liabilitiesBody"></tbody></table></div></div>
+    </div>
+
+    <div id="guidePage" class="page">
+        <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
+        <div class="table-container">
+            <h3>📖 دليل الاستخدام</h3>
+            <p>مرحباً بك في نظام المحاسب الذكي.</p>
+            <ul>
+                <li><strong>الاستيراد والتصدير:</strong> يمكنك استيراد البيانات من ملفات Excel بصيغة .xlsx.</li>
+                <li><strong>البحث:</strong> سيقوم النظام بتظليل النتائج المطابقة بلون أصفر باهت فور الكتابة.</li>
+            </ul>
+        </div>
     </div>
 </div>
 
@@ -206,7 +235,6 @@
 
 <script>
     (function(){
-        // حذف إيرادات أخرى ومصروفات أخرى من القائمة
         const _0xK3 = ["أصول", "التزامات", "حقوق ملكية", "مبيعات", "تكلفة مبيعات", "مصروفات", "إيرادات", "مخزون", "مدينون", "دائنون", "غير ذلك"];
 
         window.startApp = function() {
@@ -221,6 +249,80 @@
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             render(id);
+        };
+
+        // دالة البحث الذكي مع التظليل
+        window.tableSearch = function(bodyId, query) {
+            const rows = document.getElementById(bodyId).rows;
+            const q = query.toLowerCase();
+            for (let i = 0; i < rows.length; i++) {
+                let found = false;
+                for (let j = 0; j < rows[i].cells.length; j++) {
+                    const cell = rows[i].cells[j];
+                    const input = cell.querySelector('input');
+                    const text = input ? input.value.toLowerCase() : cell.textContent.toLowerCase();
+                    if (q && text.includes(q)) {
+                        cell.classList.add('highlight');
+                    } else {
+                        cell.classList.remove('highlight');
+                    }
+                }
+            }
+        };
+
+        // تصدير البيانات إلى Excel مباشرة من JSON
+        window.exportData = function(key) {
+            let data = [];
+            if(key === 'accounts') data = userDB.accounts;
+            else if(key === 'journal') data = userDB.journal;
+            else if(key === 'products') data = userDB.products;
+            else if(key === 'partners') data = userDB.partnersInfo;
+            
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Data");
+            XLSX.writeFile(wb, `${key}.xlsx`);
+        };
+
+        // استيراد البيانات من Excel
+        window.importData = function(input, key) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet);
+                
+                if(key === 'accounts') userDB.accounts = json;
+                else if(key === 'journal') userDB.journal = json;
+                else if(key === 'products') userDB.products = json;
+                else if(key === 'partners') userDB.partnersInfo = json;
+                
+                render(key + 'Page');
+                updateDatalists();
+                alert("تم الاستيراد بنجاح");
+            };
+            reader.readAsArrayBuffer(file);
+        };
+
+        // تصدير جدول HTML (للتقارير)
+        window.exportTableToExcel = function(id, name) {
+            const table = document.getElementById(id);
+            const wb = XLSX.utils.table_to_book(table);
+            XLSX.writeFile(wb, `${name}.xlsx`);
+        };
+
+        window.exportBalanceSheet = function() {
+            const a = document.getElementById('assetsBody');
+            const l = document.getElementById('liabilitiesBody');
+            const wb = XLSX.utils.book_new();
+            const ws1 = XLSX.utils.table_to_sheet(a);
+            const ws2 = XLSX.utils.table_to_sheet(l);
+            XLSX.utils.book_append_sheet(wb, ws1, "Assets");
+            XLSX.utils.book_append_sheet(wb, ws2, "Liabilities");
+            XLSX.writeFile(wb, "المركز_المالي.xlsx");
         };
 
         window.updateDatalists = function() {
@@ -251,7 +353,6 @@
             return (s('مبيعات') - s('تكلفة مبيعات')) + s('إيرادات') - s('مصروفات');
         };
 
-        // دالة لإدراج صف في أي مكان
         window.insertRow = function(target, index) {
             if(target === 'acc') userDB.accounts.splice(index + 1, 0, {name:'', type:'أصول'});
             if(target === 'jou') userDB.journal.splice(index + 1, 0, {date: new Date().toISOString().split('T')[0], q:0, v:0, deb:'', cre:'', name:'', prod:''});
@@ -265,7 +366,7 @@
                 const b = document.getElementById('accountsBody'); b.innerHTML = '';
                 userDB.accounts.forEach((a, i) => {
                     let o = _0xK3.map(t => `<option ${a.type==t?'selected':''}>${t}</option>`).join('');
-                    b.innerHTML += `<tr><td><input value="${a.name}" onchange="userDB.accounts[${i}].name=this.value;updateDatalists()"></td><td><select onchange="userDB.accounts[${i}].type=this.value">${o}</select></td><td><button class="btn btn-ins" onclick="insertRow('acc', ${i})">➕</button><button class="btn btn-del" onclick="userDB.accounts.splice(${i},1);render('accountsPage')">🗑️</button></td></tr>`;
+                    b.innerHTML += `<tr><td><input value="${a.name||''}" onchange="userDB.accounts[${i}].name=this.value;updateDatalists()"></td><td><select onchange="userDB.accounts[${i}].type=this.value">${o}</select></td><td><button class="btn btn-ins" onclick="insertRow('acc', ${i})">➕</button><button class="btn btn-del" onclick="userDB.accounts.splice(${i},1);render('accountsPage')">🗑️</button></td></tr>`;
                 });
             }
             if(id === 'journalPage') {
@@ -290,12 +391,12 @@
                 });
                 userDB.partnersInfo.forEach((p, i) => {
                     let d = pC[p.name] ? pC[p.name].d : 0, c = pC[p.name] ? pC[p.name].c : 0, net = d - c;
-                    b.innerHTML += `<tr><td><input value="${p.name}" onchange="userDB.partnersInfo[${i}].name=this.value;updateDatalists()"></td><td><input value="${p.phone||''}" onchange="userDB.partnersInfo[${i}].phone=this.value"></td><td><input value="${p.note||''}" onchange="userDB.partnersInfo[${i}].note=this.value"></td><td style="color:blue">${d}</td><td style="color:orange">${c}</td><td style="font-weight:bold; color:${net>=0?'green':'red'}">${net}</td><td><button class="btn btn-ins" onclick="insertRow('part', ${i})">➕</button><button class="btn btn-del" onclick="userDB.partnersInfo.splice(${i},1);render('partnersPage')">🗑️</button></td></tr>`;
+                    b.innerHTML += `<tr><td><input value="${p.name||''}" onchange="userDB.partnersInfo[${i}].name=this.value;updateDatalists()"></td><td><input value="${p.phone||''}" onchange="userDB.partnersInfo[${i}].phone=this.value"></td><td><input value="${p.note||''}" onchange="userDB.partnersInfo[${i}].note=this.value"></td><td style="color:blue">${d}</td><td style="color:orange">${c}</td><td style="font-weight:bold; color:${net>=0?'green':'red'}">${net}</td><td><button class="btn btn-ins" onclick="insertRow('part', ${i})">➕</button><button class="btn btn-del" onclick="userDB.partnersInfo.splice(${i},1);render('partnersPage')">🗑️</button></td></tr>`;
                 });
             }
             if(id === 'trialPage') {
                 const b = document.getElementById('trialBody'); b.innerHTML = '';
-                getTrialBalances().forEach(a => { b.innerHTML += `<tr><td>${a.name}</td><td>${a.d}</td><td>${a.c}</td><td>${a.balance>0?a.balance:0}</td><td>${a.balance<0?Math.abs(a.balance):0}</td></tr>`; });
+                getTrialBalances().forEach(a => { b.innerHTML += `<tr><td class="trial-blue">${a.name}</td><td>${a.d}</td><td>${a.c}</td><td class="trial-blue">${a.balance>0?a.balance:0}</td><td class="trial-blue">${a.balance<0?Math.abs(a.balance):0}</td></tr>`; });
             }
             if(id === 'incomePage') {
                 const b = document.getElementById('incomeBody'); b.innerHTML = '';
@@ -319,7 +420,8 @@
                 let textColor = nt >= 0 ? "var(--success)" : "var(--danger)";
                 lb.innerHTML += `<tr style="background:#f0fdf4; font-weight:bold; color:${textColor}"><td>${resText}</td><td>${nt}</td></tr><tr class="total-row"><td>الإجمالي</td><td>${tA}</td></tr>`;
                 ab.innerHTML += `<tr class="total-row"><td>الإجمالي</td><td>${tA}</td></tr>`;
-                document.querySelector('#liabilitiesBody tr:last-child td:last-child').innerText = tL;
+                const finalRow = lb.querySelector('tr:last-child td:last-child');
+                if(finalRow) finalRow.innerText = tL;
             }
             if(id === 'productsPage') {
                 const b = document.getElementById('productsBody'); b.innerHTML = '';
@@ -341,9 +443,7 @@
         window.checkSalesReminder = function(i, val) {
             userDB.journal[i].cre = val;
             let creAcc = userDB.accounts.find(a => a.name === val);
-            if(creAcc && creAcc.type === "مبيعات") {
-                alert("🔔 تنبيه: يجب عمل قيد إثبات تكلفة البضاعة المباعة (من ح/ تكلفة مبيعات إلى ح/ المخزون).");
-            }
+            if(creAcc && creAcc.type === "مبيعات") alert("🔔 تنبيه: يجب عمل قيد إثبات تكلفة البضاعة المباعة.");
         };
 
         window.validateStock = function(i) {
