@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -136,16 +137,16 @@
 <datalist id="partnerList"></datalist>
 
 <script type="module">
-    // قفل النطاق - Domain Lock
-    const allowedDomain = "michaelmaher923-cyber.github.io";
-    if (window.location.hostname !== allowedDomain) {
-        document.body.innerHTML = `
-            <div style="text-align:center; margin-top:100px; font-family:sans-serif; direction:rtl;">
-                <h1 style="color:red;">عذراً، غير مسموح بتشغيل هذا التطبيق خارج النطاق الرسمي.</h1>
-                <p>يرجى التوجه إلى الموقع الرسمي: <a href="https://${allowedDomain}/Accountsite26/">اضغط هنا</a></p>
-            </div>`;
-        throw new Error("Unauthorized Domain");
-    }
+/* كود الحماية - يوضع في البداية تماماً */
+if (window.location.hostname !== "michaelmaher923-cyber.github.io") {
+    document.body.innerHTML = `
+        <div style="direction:rtl; text-align:center; padding:50px; font-family:sans-serif;">
+            <h2 style="color:red;">❌ خطأ في الترخيص</h2>
+            <p>هذا الكود مبرمج للعمل فقط على الرابط الرسمي الخاص بـ أ/ مايكل ماهر.</p>
+
+        </div>`;
+    throw new Error("Unauthorized Domain Access");
+}
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -313,4 +314,75 @@
             });
             userDB.partnersInfo.forEach((p, i) => {
                 let d = pCalc[p.name] ? pCalc[p.name].d : 0, c = pCalc[p.name] ? pCalc[p.name].c : 0, net = d - c;
-                b.innerHTML += `<tr><td><input value="${p.name}" onchange="userDB.partnersInfo[${i}].name=this.value;updateDatalists()"></td><td><input value="${p.phone||''}" onchange="userDB.partnersInfo[${i}].phone=this.value"></td><td><input value="${p.note||''}" onchange="userDB.partnersInfo[${i}].note=this.value"></td><td style="color:blue">${d}</td><td style="color:orange">${c}</td><td style="font-weight:bold; color:${net>=0?'green':'red'}">${net}
+                b.innerHTML += `<tr><td><input value="${p.name}" onchange="userDB.partnersInfo[${i}].name=this.value;updateDatalists()"></td><td><input value="${p.phone||''}" onchange="userDB.partnersInfo[${i}].phone=this.value"></td><td><input value="${p.note||''}" onchange="userDB.partnersInfo[${i}].note=this.value"></td><td style="color:blue">${d}</td><td style="color:orange">${c}</td><td style="font-weight:bold; color:${net>=0?'green':'red'}">${net}</td><td><button class="btn btn-del" onclick="userDB.partnersInfo.splice(${i},1);render('partnersPage')">🗑️</button></td></tr>`;
+            });
+        }
+        if(id === 'trialPage') {
+            const b = document.getElementById('trialBody'); b.innerHTML = '';
+            getTrialBalances().forEach(a => { b.innerHTML += `<tr><td>${a.name}</td><td>${a.d}</td><td>${a.c}</td><td>${a.balance>0?a.balance:0}</td><td>${a.balance<0?Math.abs(a.balance):0}</td></tr>`; });
+        }
+        if(id === 'incomePage') {
+            const b = document.getElementById('incomeBody'); b.innerHTML = '';
+            let bals = getTrialBalances() || [];
+            let sum = (type) => bals.filter(a => a.type === type).reduce((s, a) => s + Math.abs(a.balance), 0);
+            let mabi = sum('مبيعات'), cost = sum('تكلفة مبيعات'), mojmal = mabi - cost;
+            let otherRev = sum('إيرادات أخرى') + sum('إيرادات'), otherExp = sum('مصروفات اخرى') + sum('مصروفات'), net = mojmal + otherRev - otherExp;
+            b.innerHTML = `<tr><td>إجمالي المبيعات</td><td>${mabi}</td></tr><tr><td>(-) تكلفة البضاعة</td><td>${cost}</td></tr><tr class="total-row"><td>مجمل الربح</td><td>${mojmal}</td></tr><tr><td>(+) إيرادات أخرى</td><td>${otherRev}</td></tr><tr><td>(-) مصروفات</td><td>${otherExp}</td></tr><tr class="total-row" style="background:#dcfce7"><td>صافي الربح</td><td>${net}</td></tr>`;
+        }
+        if(id === 'balanceSheetPage') {
+            let bals = getTrialBalances(), ab = document.getElementById('assetsBody'), lb = document.getElementById('liabilitiesBody');
+            ab.innerHTML = ''; lb.innerHTML = ''; let tA = 0, tL = 0;
+            bals.forEach(a => {
+                if(a.type === 'أصول' && (a.balance !== 0 || a.d !== 0)) { 
+                    let val = a.balance > 0 ? a.balance : a.d;
+                    tA += val; ab.innerHTML += `<tr><td>${a.name}</td><td>${val}</td></tr>`; 
+                }
+                if(['التزامات', 'حقوق ملكية'].includes(a.type) && (a.balance !== 0 || a.c !== 0)) { 
+                    let val = a.balance < 0 ? Math.abs(a.balance) : a.c;
+                    tL += val; lb.innerHTML += `<tr><td>${a.name}</td><td>${val}</td></tr>`; 
+                }
+            });
+            let net = calculateNetProfit(); tL += net;
+            lb.innerHTML += `<tr style="background:#f0fdf4; font-weight:bold; color:var(--success)"><td>صافي الربح</td><td>${net}</td></tr>`;
+            ab.innerHTML += `<tr class="total-row"><td>الإجمالي</td><td>${tA}</td></tr>`;
+            lb.innerHTML += `<tr class="total-row"><td>الإجمالي</td><td>${tL}</td></tr>`;
+        }
+        if(id === 'productsPage') {
+            const b = document.getElementById('productsBody'); b.innerHTML = '';
+            userDB.products.forEach((p, i) => {
+                let current = parseFloat(p.op)||0;
+                userDB.journal.forEach(j => { if(j.prod===p.name){ if(j.deb==="المخزون")current+=parseFloat(j.q); if(j.cre==="المخزون")current-=parseFloat(j.q); }});
+                b.innerHTML += `<tr><td><input value="${p.name||''}" onchange="userDB.products[${i}].name=this.value"></td><td><input type="number" value="${p.price||0}" onchange="userDB.products[${i}].price=this.value"></td><td><input type="number" value="${p.op||0}" onchange="userDB.products[${i}].op=this.value"></td><td>${current}</td><td><button class="btn btn-del" onclick="userDB.products.splice(${i},1);render('productsPage')">🗑️</button></td></tr>`;
+            });
+        }
+    }
+
+    function validateStock(i) {
+        let j = userDB.journal[i];
+        if(j.cre === "المخزون" && j.prod) {
+            let product = userDB.products.find(p => p.name === j.prod), current = parseFloat(product.op)||0;
+            userDB.journal.forEach((jj, idx) => { if(idx !== i && jj.prod === j.prod) { if(jj.deb === "المخزون") current += parseFloat(jj.q)||0; if(jj.cre === "المخزون") current -= parseFloat(jj.q)||0; }});
+            if(parseFloat(document.getElementById('q'+i).value) > current) { alert("المتاح: " + current); document.getElementById('q'+i).value = 0; }
+        }
+        calcRowVal(i);
+    }
+
+    function updateRowPrice(i, pName) {
+        const product = userDB.products.find(p => p.name === pName);
+        userDB.journal[i].prod = pName;
+        if(product) { document.getElementById('v'+i).value = (parseFloat(product.price) || 0) * (parseFloat(document.getElementById('q'+i).value) || 0); userDB.journal[i].v = document.getElementById('v'+i).value; }
+    }
+
+    function calcRowVal(i) {
+        userDB.journal[i].q = document.getElementById('q'+i).value;
+        const product = userDB.products.find(p => p.name === userDB.journal[i].prod);
+        if(product) { document.getElementById('v'+i).value = (parseFloat(product.price) || 0) * (parseFloat(userDB.journal[i].q) || 0); userDB.journal[i].v = document.getElementById('v'+i).value; }
+    }
+
+    function addAcc() { userDB.accounts.push({name:'', type:'أصول', fixed: false}); render('accountsPage'); }
+    function addJ() { userDB.journal.push({date: new Date().toISOString().split('T')[0], q:0, v:0, deb:'', cre:'', name:'', prod:''}); render('journalPage'); }
+    function addP() { userDB.products.push({name:'', price:0, op:0}); render('productsPage'); }
+    function addPartnerInfo() { userDB.partnersInfo.push({name:'', phone:'', note:''}); render('partnersPage'); }
+</script>
+</body>
+</html>
