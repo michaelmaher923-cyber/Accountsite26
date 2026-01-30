@@ -304,8 +304,8 @@
                 let bl = getTrialBalances(), ab = document.getElementById('assetsBody'), lb = document.getElementById('liabilitiesBody');
                 ab.innerHTML = ''; lb.innerHTML = ''; let tA = 0, tL = 0;
                 bl.forEach(a => {
-                    if(a.type === 'أصول' && (a.balance !== 0 || a.d !== 0)) { let v = a.balance > 0 ? a.balance : a.d; tA += v; ab.innerHTML += `<tr><td>${a.name}</td><td>${v}</td></tr>`; }
-                    if(['التزامات', 'حقوق ملكية'].includes(a.type) && (a.balance !== 0 || a.c !== 0)) { let v = a.balance < 0 ? Math.abs(a.balance) : a.c; tL += v; lb.innerHTML += `<tr><td>${a.name}</td><td>${v}</td></tr>`; }
+                    if(a.type === 'أصول' && a.balance > 0) { let v = a.balance; tA += v; ab.innerHTML += `<tr><td>${a.name}</td><td>${v}</td></tr>`; }
+                    if(['التزامات', 'حقوق ملكية'].includes(a.type) && a.balance < 0) { let v = Math.abs(a.balance); tL += v; lb.innerHTML += `<tr><td>${a.name}</td><td>${v}</td></tr>`; }
                 });
                 let nt = calculateNetProfit(); tL += nt;
                 lb.innerHTML += `<tr style="background:#f0fdf4; font-weight:bold; color:var(--success)"><td>صافي الربح</td><td>${nt}</td></tr><tr class="total-row"><td>الإجمالي</td><td>${tA}</td></tr>`;
