@@ -1,147 +1,69 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>المحاسب - نسخة مرخصة</title>
-    <style>
-        /* التنسيقات الأصلية محفوطة بالكامل */
-        :root { --main: #1e293b; --accent: #0284c7; --bg: #f8fafc; --white: #ffffff; --danger: #be123c; --success: #059669; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; color: #334155; }
-        header { background: var(--main); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .logo-img { width: 40px; height: 40px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .page { display: none; padding: 25px; }
-        .page.active { display: block; }
-        .table-container { background: var(--white); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow-x: auto; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background: #f1f5f9; padding: 12px; border: 1px solid #e2e8f0; font-size: 13px; color: var(--main); }
-        td { padding: 8px; border: 1px solid #e2e8f0; text-align: center; }
-        input, select { width: 92%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; }
-        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-save { background: var(--success); color: white; }
-        .btn-del { background: var(--danger); color: white; }
-        .btn-add { background: var(--main); color: white; margin-bottom: 15px; }
-        .nav-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; padding: 20px; }
-        .card { background: white; padding: 25px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid #e2e8f0; transition: 0.3s; }
-        .auth-box { max-width: 400px; margin: 80px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); text-align: center; }
-        .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #f1f5f9; }
-        .tab { flex: 1; padding: 10px; cursor: pointer; font-weight: bold; color: #94a3b8; }
-        .tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
-        #loader { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; justify-content:center; align-items:center; flex-direction:column; }
-        #lic-err { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; color:red; z-index:100000; justify-content:center; align-items:center; font-size:30px; font-weight:bold; direction:rtl; }
-    </style>
+<meta charset="UTF-8">
+<title>المحاسب - نسخة مرخصة</title>
+<style>
+:root{--main:#1e293b;--accent:#0284c7;--bg:#f8fafc;--white:#ffffff;--danger:#be123c;--success:#059669}body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg);margin:0;color:#334155}#lic-err{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000;color:red;z-index:999999;justify-content:center;align-items:center;font-size:30px;font-weight:bold;direction:rtl}header{background:var(--main);color:#fff;padding:15px 30px;display:flex;justify-content:space-between;align-items:center}.logo-img{width:40px;height:40px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px}.page{display:none;padding:25px}.page.active{display:block}.table-container{background:var(--white);padding:20px;border-radius:12px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);overflow-x:auto;margin-bottom:20px}table{width:100%;border-collapse:collapse;margin-top:10px}th{background:#f1f5f9;padding:12px;border:1px solid #e2e8f0;font-size:13px;color:var(--main)}td{padding:8px;border:1px solid #e2e8f0;text-align:center}input,select{width:92%;padding:8px;border:1px solid #cbd5e1;border-radius:4px;font-size:14px}.btn{padding:10px 20px;border:none;border-radius:6px;cursor:pointer;font-weight:700;transition:.2s}.btn-save{background:var(--success);color:#fff}.btn-del{background:var(--danger);color:#fff}.btn-add{background:var(--main);color:#fff;margin-bottom:15px}.nav-menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:15px;padding:20px}.card{background:#fff;padding:25px;border-radius:12px;text-align:center;cursor:pointer;border:1px solid #e2e8f0;transition:.3s}.auth-box{max-width:400px;margin:80px auto;background:#fff;padding:30px;border-radius:15px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);text-align:center}.tabs{display:flex;margin-bottom:20px;border-bottom:2px solid #f1f5f9}.tab{flex:1;padding:10px;cursor:pointer;font-weight:700;color:#94a3b8}.tab.active{color:var(--accent);border-bottom:2px solid var(--accent)}#loader{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.8);z-index:9999;justify-content:center;align-items:center;flex-direction:column}
+</style>
 </head>
 <body>
-
-<div id="lic-err">⚠️ خطأ في الترخيص: لا يمكن تشغيل هذا البرنامج خارج النطاق المعتمد.</div>
+<div id="lic-err">⚠️ خطأ في الترخيص: لا يمكن تشغيل هذا البرنامج إلا عبر الرابط المعتمد.</div>
 <div id="loader"><b>⏳ جاري الاتصال...</b></div>
-
-<div id="main-wrapper" style="display:none;">
+<div id="main-lock" style="display:none">
     <div id="authScreen" class="auth-box">
-        <div class="logo-img" style="margin: 0 auto 20px; width: 60px; height: 60px; font-size: 30px;">📈</div>
-        <div class="tabs">
-            <div id="loginTab" class="tab active" onclick="switchAuth(true)">تسجيل الدخول</div>
-            <div id="registerTab" class="tab" onclick="switchAuth(false)">إنشاء حساب</div>
-        </div>
-        <input type="text" id="username" placeholder="اسم المستخدم" style="margin-bottom:15px; width:100%;">
-        <input type="password" id="password" placeholder="كلمة المرور" style="margin-bottom:5px; width:100%;">
+        <div class="logo-img" style="margin:0 auto 20px;width:60px;height:60px;font-size:30px">📈</div>
+        <div class="tabs"><div id="loginTab" class="tab active" onclick="switchAuth(true)">تسجيل الدخول</div><div id="registerTab" class="tab" onclick="switchAuth(false)">إنشاء حساب</div></div>
+        <input type="text" id="username" placeholder="اسم المستخدم" style="margin-bottom:15px;width:100%"><input type="password" id="password" placeholder="كلمة المرور" style="margin-bottom:5px;width:100%"><p style="font-size:11px;color:var(--danger);margin-bottom:10px">* كلمة المرور يجب أن لا تقل عن 6 أحرف</p>
         <button class="btn btn-save" style="width:100%" onclick="processAuth()">دخول</button>
     </div>
-
-    <div id="appScreen" style="display:none;">
-        <header>
-            <div style="display:flex; align-items:center; gap:12px;"><div class="logo-img">📉</div><h2 style="margin:0">المحاسب</h2></div>
-            <div style="display:flex; align-items:center; gap:15px;">
-                <span id="userDisplay" style="font-weight: bold;"></span>
-                <button class="btn btn-save" onclick="syncToCloud()">حفظ البيانات</button>
-                <button class="btn btn-del" onclick="logout()">خروج</button>
-            </div>
-        </header>
-        <div id="homePage" class="page active">
-            <div class="nav-menu">
-                <div class="card" onclick="openPage('accountsPage')"><h3>📁 الحسابات</h3></div>
-                <div class="card" onclick="openPage('journalPage')"><h3>📓 اليومية</h3></div>
-                <div class="card" onclick="openPage('productsPage')"><h3>📦 المخزن</h3></div>
-                <div class="card" onclick="openPage('partnersPage')"><h3>🤝 المتعاملون</h3></div>
-                <div class="card" onclick="openPage('trialPage')"><h3>⚖️ الميزان</h3></div>
-                <div class="card" onclick="openPage('incomePage')" style="background: #f0fdf4;"><h3>📊 قائمة الدخل</h3></div>
-                <div class="card" onclick="openPage('balanceSheetPage')" style="background: #eff6ff;"><h3>🏦 المركز المالي</h3></div>
-                <div class="card" onclick="openPage('guidePage')" style="background: #fffbeb; border: 1px dashed #f59e0b;"><h3>📖 دليل الاستخدام</h3></div>
-            </div>
-        </div>
+    <div id="appScreen" style="display:none">
+        <header><div style="display:flex;align-items:center;gap:12px"><div class="logo-img">📉</div><h2 style="margin:0">المحاسب</h2></div><div style="display:flex;align-items:center;gap:15px"><span id="userDisplay" style="font-weight:700"></span><button class="btn btn-save" onclick="syncToCloud()">حفظ البيانات</button><button class="btn btn-del" onclick="logout()">خروج</button></div></header>
+        <div id="homePage" class="page active"><div class="nav-menu"><div class="card" onclick="openPage('accountsPage')"><h3>📁 الحسابات</h3></div><div class="card" onclick="openPage('journalPage')"><h3>📓 اليومية</h3></div><div class="card" onclick="openPage('productsPage')"><h3>📦 المخزن</h3></div><div class="card" onclick="openPage('partnersPage')"><h3>🤝 المتعاملون</h3></div><div class="card" onclick="openPage('trialPage')"><h3>⚖️ الميزان</h3></div><div class="card" onclick="openPage('incomePage')" style="background:#f0fdf4"><h3>📊 قائمة الدخل</h3></div><div class="card" onclick="openPage('balanceSheetPage')" style="background:#eff6ff"><h3>🏦 المركز المالي</h3></div><div class="card" onclick="openPage('guidePage')" style="background:#fffbeb;border:1px dashed #f59e0b"><h3>📖 دليل الاستخدام</h3></div></div></div>
         <div id="accountsPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><h3>دليل الحسابات</h3><button class="btn btn-add" onclick="addAcc()">+ حساب جديد</button><table><thead><tr><th>اسم الحساب</th><th>النوع</th><th>إجراء</th></tr></thead><tbody id="accountsBody"></tbody></table></div></div>
         <div id="journalPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><button class="btn btn-add" onclick="addJ()">+ قيد جديد</button><table><thead><tr><th>التاريخ</th><th>مدين</th><th>دائن</th><th>الاسم</th><th>الصنف</th><th>الكمية</th><th>المبلغ</th><th>إجراء</th></tr></thead><tbody id="journalBody"></tbody></table></div></div>
         <div id="productsPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><button class="btn btn-add" onclick="addP()">+ صنف جديد</button><table><thead><tr><th>الصنف</th><th>السعر</th><th>رصيد أول</th><th>الرصيد الحالي</th><th>إجراء</th></tr></thead><tbody id="productsBody"></tbody></table></div></div>
-        <div id="partnersPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><h3>دليل المتعاملين والديون</h3><button class="btn btn-add" onclick="addPartnerInfo()">+ إضافة بيانات متعامل</button><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>ملاحظات</th><th>مدين (+)</th><th>دائن (-)</th><th>الصافي</th><th>إجراء</th></tr></thead><tbody id="partnersBody"></tbody></table></div></div>
+        <div id="partnersPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><h3>المتعاملون</h3><button class="btn btn-add" onclick="addPartnerInfo()">+ إضافة متعامل</button><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>ملاحظات</th><th>إجراء</th></tr></thead><tbody id="partnersBody"></tbody></table></div></div>
         <div id="trialPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><table><thead><tr><th>الحساب</th><th>مدين</th><th>دائن</th><th>رصيد م</th><th>رصيد د</th></tr></thead><tbody id="trialBody"></tbody></table></div></div>
-        <div id="incomePage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><h2 style="text-align: center;">📊 قائمة الدخل</h2><table><tbody id="incomeBody"></tbody></table></div></div>
-        <div id="balanceSheetPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="report-grid"><div class="table-container"><h3>الأصول</h3><table><thead><tr><th>الحساب</th><th>المبلغ</th></tr></thead><tbody id="assetsBody"></tbody></table></div><div class="table-container"><h3>الالتزامات وحقوق الملكية</h3><table><thead><tr><th>الحساب</th><th>المبلغ</th></tr></thead><tbody id="liabilitiesBody"></tbody></table></div></div></div>
-        <div id="guidePage" class="page">
-            <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
-            <div class="table-container">
-                <h2 style="text-align: center; color: var(--accent);">📖 الدليل المحاسبي</h2>
-                <div style="padding:20px; line-height:1.8;">البرنامج يعمل بنظام الجرد المستمر. يرجى اتباع التعليمات المحاسبية السليمة لضمان توازن الميزان.</div>
-            </div>
-        </div>
+        <div id="incomePage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><h2>📊 قائمة الدخل</h2><table><tbody id="incomeBody"></tbody></table></div></div>
+        <div id="balanceSheetPage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div style="display:grid;grid-template-columns:1fr 1fr;gap:20px"><div class="table-container"><h3>الأصول</h3><table><tbody id="assetsBody"></tbody></table></div><div class="table-container"><h3>الالتزامات</h3><table><tbody id="liabilitiesBody"></tbody></table></div></div></div>
+        <div id="guidePage" class="page"><button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button><div class="table-container"><h2>📖 دليل الاستخدام</h2><p>هذا البرنامج محمي بحقوق الملكية للأستاذ مايكل ماهر.</p></div></div>
     </div>
 </div>
-
-<datalist id="accList"></datalist>
-<datalist id="partnerList"></datalist>
-
-<script type="text/javascript">
-    (function(_0x1a2b,_0x3c4d){const _0x5e6f=function(_0x7a8b){while(--_0x7a8b){_0x1a2b['push'](_0x1a2b['shift']());}};_0x5e6f(++_0x3c4d);}(['\x68\x72\x65\x66','\x6c\x6f\x63\x61\x74\x69\x6f\x6e','\x6d\x69\x63\x68\x61\x65\x6c\x6d\x61\x68\x65\x72\x39\x32\x33\x2d\x63\x79\x62\x65\x72\x2e\x67\x69\x74\x68\x75\x62\x2e\x69\x6f','\x69\x6e\x63\x6c\x75\x64\x65\x73','\x73\x74\x79\x6c\x65','\x64\x69\x73\x70\x6c\x61\x79','\x6e\x6f\x6e\x65','\x66\x6c\x65\x78','\x62\x6c\x6f\x63\x6b','\x6c\x69\x63\x2d\x65\x72\x72','\x6d\x61\x69\x6e\x2d\x77\x72\x61\x70\x70\x65\x72'],0x1a4));const _0x4209=function(_0x2b1a,_0x1f3c){_0x2b1a=_0x2b1a-0x0;let _0x4d5e=['\x68\x72\x65\x66','\x6c\x6f\x63\x61\x74\x69\x6f\x6e','\x6d\x69\x63\x68\x61\x65\x6c\x6d\x61\x68\x65\x72\x39\x32\x33\x2d\x63\x79\x62\x65\x72\x2e\x67\x69\x74\x68\x75\x62\x2e\x69\x6f','\x69\x6e\x63\x6c\x75\x64\x65\x73','\x73\x74\x79\x6c\x65','\x64\x69\x73\x70\x6c\x61\x79','\x6e\x6f\x6e\x65','\x66\x6c\x65\x78','\x62\x6c\x6f\x63\x6b','\x6c\x69\x63\x2d\x65\x72\x72','\x6d\x61\x69\x6e\x2d\x77\x72\x61\x70\x70\x65\x72'][_0x2b1a];return _0x4d5e;};
-    
-    // التحقق من الرابط وتشفيره
-    window.onload = function() {
-        var _0x01 = window['\x6c\x6f\x63\x61\x74\x69\x6f\x6e']['\x68\x72\x65\x66'];
-        var _0x02 = '\x6d\x69\x63\x68\x61\x65\x6c\x6d\x61\x68\x65\x72\x39\x32\x33\x2d\x63\x79\x62\x65\x72\x2e\x67\x69\x74\x68\x75\x62\x2e\x69\x6f';
-        
-        if (_0x01['\x69\x6e\x63\x6c\x75\x64\x65\x73'](_0x02)) {
-            document.getElementById('main-wrapper')['\x73\x74\x79\x6c\x65']['\x64\x69\x73\x70\x6c\x61\x79'] = '\x62\x6c\x6f\x63\x6b';
-            document.getElementById('lic-err')['\x73\x74\x79\x6c\x65']['\x64\x69\x73\x70\x6c\x61\x79'] = '\x6e\x6f\x6e\x65';
-        } else {
-            document.getElementById('main-wrapper')['\x73\x74\x79\x6c\x65']['\x64\x69\x73\x70\x6c\x61\x79'] = '\x6e\x6f\x6e\x65';
-            document.getElementById('lic-err')['\x73\x74\x79\x6c\x65']['\x64\x69\x73\x70\x6c\x61\x79'] = '\x66\x6c\x65\x78';
-            throw new Error("Unauthorized Domain");
-        }
-    };
-</script>
+<datalist id="accList"></datalist><datalist id="partnerList"></datalist>
 
 <script type="module">
-    // يتم وضع بقية كود الجافا سكريبت الوظيفي هنا (Firebase والمنطق المحاسبي)
-    // الكود تم الاحتفاظ به 100% كما هو تقنياً ولكن تم تغليفه بالحماية
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyBP7HP1w4MbOFZWnv7BdpKwDlYjv4VJUTM",
-        authDomain: "accountsite26.firebaseapp.com",
-        databaseURL: "https://accountsite26-default-rtdb.firebaseio.com",
-        projectId: "accountsite26",
-        storageBucket: "accountsite26.firebasestorage.app",
-        messagingSenderId: "1015795938039",
-        appId: "1:1015795938039:web:b625e24fca2c5b231d19f2"
-    };
+const _0x1f2e=["\x68\x6f\x73\x74\x6e\x61\x6d\x65","\x6c\x6f\x63\x61\x74\x69\x6f\x6e","\x6d\x69\x63\x68\x61\x65\x6c\x6d\x61\x68\x65\x72\x39\x32\x33\x2d\x63\x79\x62\x65\x72\x2e\x67\x69\x74\x68\x75\x62\x2e\x69\x6f","\x64\x69\x73\x70\x6c\x61\x79","\x73\x74\x79\x6c\x65","\x6c\x69\x63\x2d\x65\x72\x72","\x67\x65\x74\x45\x6c\x65\x6d\x65\x6e\x74\x42\x79\x49\x64","\x66\x6c\x65\x78","\x6d\x61\x69\x6e\x2d\x6c\x6f\x63\x6b","\x62\x6c\x6f\x63\x6b"];
+(function(){if(window[_0x1f2e[1]][_0x1f2e[0]]!==_0x1f2e[2]){document[_0x1f2e[6]](_0x1f2e[5])[_0x1f2e[4]][_0x1f2e[3]]=_0x1f2e[7];return}else{document[_0x1f2e[6]](_0x1f2e[8])[_0x1f2e[4]][_0x1f2e[3]]=_0x1f2e[9]}})();
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
+const firebaseConfig = { apiKey: "AIzaSyBP7HP1w4MbOFZWnv7BdpKwDlYjv4VJUTM", authDomain: "accountsite26.firebaseapp.com", databaseURL: "https://accountsite26-default-rtdb.firebaseio.com", projectId: "accountsite26", storageBucket: "accountsite26.firebasestorage.app", messagingSenderId: "1015795938039", appId: "1:1015795938039:web:b625e24fca2c5b231d19f2" };
+const app = initializeApp(firebaseConfig); const db = getDatabase(app); const auth = getAuth(app);
 
-    // [بقية الدوال المحاسبية الأصلية موجودة في الخلفية...]
-    // سيتم تشغيلها تلقائياً عند الدخول من الرابط الصحيح
-    // تم حذف التفاصيل المكررة هنا للاختصار ولكنها تعمل بالخلفية بمجرد تخطي فحص الرابط
-</script>
-
-<script>
-    // الدوال المساعدة للواجهة (نفس كودك الأصلي)
-    const FIXED_ACCOUNTS = ["المخزون", "العملاء", "الموردين", "المدينون", "الدائنون"];
-    const ACC_TYPES = ["أصول", "التزامات", "حقوق ملكية", "مبيعات", "تكلفة مبيعات", "مصروفات", "إيرادات", "إيرادات أخرى", "مصروفات اخرى", "غير ذلك"];
-    window.userDB = { accounts: [], journal: [], products: [], partnersInfo: [] };
-    
-    function switchAuth(m) { document.getElementById('loginTab').classList.toggle('active', m); document.getElementById('registerTab').classList.toggle('active', !m); }
-    function openPage(id) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.getElementById(id).classList.add('active'); render(id); }
-    // ... [بقية منطق الـ Render والحسابات مدمج]
+window.processAuth=async()=>{const u=document.getElementById('username').value.trim(),p=document.getElementById('password').value.trim(),is=document.getElementById('loginTab').classList.contains('active');if(!u||!p)return alert("أكمل البيانات");document.getElementById('loader').style.display='flex';const e=u.toLowerCase().replace(/[^a-z0-9]/g,"")+"@maher.com";try{if(is)await signInWithEmailAndPassword(auth,e,p);else await createUserWithEmailAndPassword(auth,e,p)}catch(x){alert("خطأ في البيانات");document.getElementById('loader').style.display='none'}};
+onAuthStateChanged(auth,async(u)=>{if(u){window.currentUser=u.email.split('@')[0];const s=await get(ref(db,`users/${u.uid}/data`));const d=s.exists()?s.val():{};window.userDB={accounts:d.accounts||[],journal:d.journal||[],products:d.products||[],partnersInfo:d.partnersInfo||[]};initFixedAccounts();startApp()}});
+window.syncToCloud=async()=>{if(!auth.currentUser)return;document.getElementById('loader').style.display='flex';try{await set(ref(db,`users/${auth.currentUser.uid}/data`),window.userDB);alert("✅ تم الحفظ")}catch(x){alert("❌ فشل")}document.getElementById('loader').style.display='none'};
+window.logout=()=>signOut(auth).then(()=>location.reload());
+const FIXED=["المخزون","العملاء","الموردين","المدينون","الدائنون"],TYPES=["أصول","التزامات","حقوق ملكية","مبيعات","تكلفة مبيعات","مصروفات","إيرادات"];
+window.initFixedAccounts=()=>{FIXED.forEach(n=>{if(!window.userDB.accounts.find(a=>a.name===n)){let t=(n==="الموردين"||n==="الدائنون")?'التزامات':'أصول';window.userDB.accounts.push({name:n,type:t,fixed:true})}})}
+window.startApp=()=>{document.getElementById('authScreen').style.display='none';document.getElementById('appScreen').style.display='block';document.getElementById('loader').style.display='none';document.getElementById('userDisplay').innerText="👤 "+window.currentUser;uDL()}
+window.switchAuth=(m)=>{document.getElementById('loginTab').classList.toggle('active',m);document.getElementById('registerTab').classList.toggle('active',!m)}
+window.openPage=(id)=>{document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');render(id)}
+const uDL=()=>{const al=document.getElementById('accList');al.innerHTML='';window.userDB.accounts.forEach(a=>{if(a.name)al.innerHTML+=`<option value="${a.name}">`});const pl=document.getElementById('partnerList');pl.innerHTML='';window.userDB.partnersInfo.forEach(p=>{if(p.name)pl.innerHTML+=`<option value="${p.name}">`})}
+window.render=(id)=>{if(id==='accountsPage'){const b=document.getElementById('accountsBody');b.innerHTML='';window.userDB.accounts.forEach((a,i)=>{let o=TYPES.map(t=>`<option ${a.type==t?'selected':''}>${t}</option>`).join('');b.innerHTML+=`<tr><td><input value="${a.name}" ${a.fixed?'readonly':''} onchange="window.userDB.accounts[${i}].name=this.value;uDL()"></td><td><select onchange="window.userDB.accounts[${i}].type=this.value">${o}</select></td><td>${a.fixed?'🔒':`<button class="btn btn-del" onclick="window.userDB.accounts.splice(${i},1);render('accountsPage')">🗑️</button>`}</td></tr>`})}
+if(id==='journalPage'){const b=document.getElementById('journalBody');b.innerHTML='';window.userDB.journal.forEach((j,i)=>{let pO=`<option value="">-- صنف --</option>`+window.userDB.products.map(p=>`<option value="${p.name}" ${j.prod===p.name?'selected':''}>${p.name}</option>`).join('');b.innerHTML+=`<tr><td><input type="date" value="${j.date}" onchange="window.userDB.journal[${i}].date=this.value"></td><td><input list="accList" value="${j.deb}" onchange="window.userDB.journal[${i}].deb=this.value"></td><td><input list="accList" value="${j.cre}" onchange="window.userDB.journal[${i}].cre=this.value"></td><td><input list="partnerList" value="${j.name||''}" onchange="window.userDB.journal[${i}].name=this.value"></td><td><select onchange="uRP(${i},this.value)">${pO}</select></td><td><input type="number" id="q${i}" value="${j.q}" oninput="cRV(${i})"></td><td><input type="number" id="v${i}" value="${j.v}" oninput="window.userDB.journal[${i}].v=this.value"></td><td><button class="btn btn-del" onclick="window.userDB.journal.splice(${i},1);render('journalPage')">🗑️</button></td></tr>`})}
+if(id==='productsPage'){const b=document.getElementById('productsBody');b.innerHTML='';window.userDB.products.forEach((p,i)=>{let c=parseFloat(p.op)||0;window.userDB.journal.forEach(j=>{if(j.prod===p.name){if(j.deb==="المخزون")c+=parseFloat(j.q);if(j.cre==="المخزون")c-=parseFloat(j.q)}});b.innerHTML+=`<tr><td><input value="${p.name}" onchange="window.userDB.products[${i}].name=this.value;uDL()"></td><td><input type="number" value="${p.price}" onchange="window.userDB.products[${i}].price=this.value"></td><td><input type="number" value="${p.op}" onchange="window.userDB.products[${i}].op=this.value"></td><td>${c}</td><td><button class="btn btn-del" onclick="window.userDB.products.splice(${i},1);render('productsPage')">🗑️</button></td></tr>`})}
+if(id==='partnersPage'){const b=document.getElementById('partnersBody');b.innerHTML='';window.userDB.partnersInfo.forEach((p,i)=>{b.innerHTML+=`<tr><td><input value="${p.name}" onchange="window.userDB.partnersInfo[${i}].name=this.value;uDL()"></td><td><input value="${p.phone||''}" onchange="window.userDB.partnersInfo[${i}].phone=this.value"></td><td><input value="${p.note||''}" onchange="window.userDB.partnersInfo[${i}].note=this.value"></td><td><button class="btn btn-del" onclick="window.userDB.partnersInfo.splice(${i},1);render('partnersPage')">🗑️</button></td></tr>`})}
+if(id==='trialPage'){const b=document.getElementById('trialBody');b.innerHTML='';const acs={};window.userDB.accounts.forEach(a=>{if(a.name)acs[a.name]={d:0,c:0}});window.userDB.journal.forEach(j=>{if(acs[j.deb])acs[j.deb].d+=parseFloat(j.v)||0;if(acs[j.cre])acs[j.cre].c+=parseFloat(j.v)||0});for(let n in acs){let bal=acs[n].d-acs[n].c;b.innerHTML+=`<tr><td>${n}</td><td>${acs[n].d}</td><td>${acs[n].c}</td><td>${bal>0?bal:0}</td><td>${bal<0?Math.abs(bal):0}</td></tr>`}}}
+window.addAcc=()=>{window.userDB.accounts.push({name:'',type:'أصول',fixed:false});render('accountsPage')}
+window.addJ=()=>{window.userDB.journal.push({date:new Date().toISOString().split('T')[0],q:0,v:0,deb:'',cre:'',name:'',prod:''});render('journalPage')}
+window.addP=()=>{window.userDB.products.push({name:'',price:0,op:0});render('productsPage')}
+window.addPartnerInfo=()=>{window.userDB.partnersInfo.push({name:'',phone:'',note:''});render('partnersPage')}
+window.cRV=(i)=>{window.userDB.journal[i].q=document.getElementById('q'+i).value;const pr=window.userDB.products.find(p=>p.name===window.userDB.journal[i].prod);if(pr){let v=(parseFloat(pr.price)||0)*(parseFloat(window.userDB.journal[i].q)||0);document.getElementById('v'+i).value=v;window.userDB.journal[i].v=v}}
+window.uRP=(i,n)=>{window.userDB.journal[i].prod=n;cRV(i)}
 </script>
 </body>
 </html>
