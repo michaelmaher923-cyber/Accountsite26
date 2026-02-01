@@ -408,7 +408,7 @@
 
         window.insertRow = function(target, index) {
             if(target === 'acc') userDB.accounts.splice(index + 1, 0, {name:'', type:'أصول'});
-            if(target === 'jou') userDB.journal.splice(index + 1, 0, {ref:'', date: new Date().toISOString().split('T')[0], q:0, v:0, deb:'', cre:'', name:'', prod:'', note:'', isBlue: false});
+            if(target === 'jou') userDB.journal.splice(index + 1, 0, {ref:'', date: new Date().toISOString().split('T')[0], q:0, v:0, deb:'', cre:'', name:'', prod:'', note:'', isBlue: false, showExtra: false});
             if(target === 'prod') userDB.products.splice(index + 1, 0, {name:'', price:0});
             if(target === 'part') userDB.partnersInfo.splice(index + 1, 0, {name:'', phone:'', note:''});
             render(document.querySelector('.page.active').id);
@@ -425,10 +425,12 @@
             if(id === 'journalPage') {
                 const b = document.getElementById('journalBody'); b.innerHTML = '';
                 userDB.journal.forEach((j, i) => {
-                    let hClass = j.isBlue ? 'trial-blue' : '';
+                    let rowClass = j.isBlue ? 'trial-blue' : '';
+                    let extraStyle = j.showExtra ? 'table-row' : 'none';
+                    let extraBg = j.isBlue ? 'var(--blue-soft)' : '#f0fdf4';
                     let pO = `<option value="">-- صنف --</option>` + userDB.products.map(p => `<option value="${p.name}" ${j.prod===p.name?'selected':''}>${p.name}</option>`).join('');
                     b.innerHTML += `
-                    <tr class="${hClass}">
+                    <tr class="${rowClass}">
                         <td><input type="text" placeholder="رقم" value="${j.ref||''}" onchange="userDB.journal[${i}].ref=this.value"></td>
                         <td><input type="date" value="${j.date||''}" onchange="userDB.journal[${i}].date=this.value"></td>
                         <td><input list="accList" value="${j.deb||''}" onchange="userDB.journal[${i}].deb=this.value"></td>
@@ -437,15 +439,15 @@
                         <td><input type="number" id="v${i}" value="${j.v||0}" oninput="userDB.journal[${i}].v=this.value"></td>
                         <td><input type="text" placeholder="ملاحظة" value="${j.note||''}" onchange="userDB.journal[${i}].note=this.value"></td>
                         <td style="white-space:nowrap">
-                            <button title="تفاصيل الصنف" onclick="toggleExtra(${i})" style="cursor:pointer">📦</button>
-                            <button title="تمييز القيد" onclick="userDB.journal[${i}].isBlue=!userDB.journal[${i}].isBlue;render('journalPage')" style="cursor:pointer">🎨</button>
+                            <button title="تفاصيل الصنف" onclick="userDB.journal[${i}].showExtra=!userDB.journal[${i}].showExtra;render('journalPage')" style="cursor:pointer; background:${j.showExtra?'#cbd5e1':''}">📦</button>
+                            <button title="تمييز القيد" onclick="userDB.journal[${i}].isBlue=!userDB.journal[${i}].isBlue;render('journalPage')" style="cursor:pointer; background:${j.isBlue?'#93c5fd':''}">🎨</button>
                             <button class="btn btn-ins" onclick="insertRow('jou', ${i})">➕</button>
                             <button class="btn btn-del" onclick="userDB.journal.splice(${i},1);render('journalPage')">🗑️</button>
                         </td>
                     </tr>
-                    <tr id="ex${i}" style="display:none; background:#f0fdf4;">
-                        <td colspan="4">الصنف: <select style="width:70%" onchange="updateRowPrice(${i}, this.value)">${pO}</select></td>
-                        <td colspan="4">الكمية: <input type="number" style="width:100px" id="q${i}" value="${j.q||0}" oninput="validateStock(${i})"></td>
+                    <tr style="display:${extraStyle}; background:${extraBg};">
+                        <td colspan="4" style="text-align:left; padding-left:20px;">الصنف: <select style="width:65%" onchange="updateRowPrice(${i}, this.value)">${pO}</select></td>
+                        <td colspan="4" style="text-align:right; padding-right:20px;">الكمية: <input type="number" style="width:80px" id="q${i}" value="${j.q||0}" oninput="validateStock(${i})"></td>
                     </tr>`;
                 });
             }
@@ -550,10 +552,9 @@
         };
 
         window.addAcc = () => { userDB.accounts.push({name:'', type:'أصول'}); render('accountsPage'); };
-        window.addJ = () => { userDB.journal.push({ref:'', date: new Date().toISOString().split('T')[0], q:0, v:0, deb:'', cre:'', name:'', prod:'', note:'', isBlue: false}); render('journalPage'); };
+        window.addJ = () => { userDB.journal.push({ref:'', date: new Date().toISOString().split('T')[0], q:0, v:0, deb:'', cre:'', name:'', prod:'', note:'', isBlue: false, showExtra: false}); render('journalPage'); };
         window.addP = () => { userDB.products.push({name:'', price:0}); render('productsPage'); };
         window.addPartnerInfo = () => { userDB.partnersInfo.push({name:'', phone:'', note:''}); render('partnersPage'); };
- window.toggleExtra = (i) => { const r = document.getElementById('ex'+i); r.style.display = r.style.display==='none'?'table-row':'none'; };
     })();
 </script>
 </body>
