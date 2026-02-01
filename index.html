@@ -5,7 +5,7 @@
     <title>المحاسب</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
-        :root { --main: #1e293b; --accent: #0284c7; --bg: #f8fafc; --white: #ffffff; --danger: #be123c; --success: #059669; --blue-soft: #f0f9ff; }
+        :root { --main: #1e293b; --accent: #0284c7; --bg: #f8fafc; --white: #ffffff; --danger: #be123c; --success: #059669; --blue-row: #d1e9ff; --green-row: #d1fadc; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; color: #334155; }
         header { background: var(--main); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
         .logo-img { width: 40px; height: 40px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
@@ -27,7 +27,8 @@
         .search-container { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
         .search-input { width: 300px; padding: 8px; border: 2px solid var(--accent); border-radius: 6px; }
         .highlight { background-color: #fef08a !important; transition: 0.3s; }
-        .trial-blue { background-color: var(--blue-soft) !important; }
+        .row-blue { background-color: var(--blue-row) !important; }
+.row-green { background-color: var(--green-row) !important; }
         .nav-menu { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; padding: 20px; }
         .card { background: white; padding: 25px; border-radius: 12px; text-align: center; cursor: pointer; border: 1px solid #e2e8f0; transition: 0.3s; }
         .card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
@@ -424,11 +425,15 @@
             }
             if(id === 'journalPage') {
                 const b = document.getElementById('journalBody'); b.innerHTML = '';
+                let colorCounter = 0; 
                 userDB.journal.forEach((j, i) => {
-                    let rowClass = j.isBlue ? 'trial-blue' : '';
+                    let rowClass = '';
+                    if(j.isBlue) {
+                        colorCounter++;
+                        rowClass = (colorCounter % 2 !== 0) ? 'row-blue' : 'row-green';
+                    }
                     let extraStyle = j.showExtra ? 'table-row' : 'none';
-                    // هنا خلينا لون زرار التلوين نفس لون الميزان الباهت، وصف المخزن يتبع لون القيد دايماً
-                    let btnColor = j.isBlue ? 'var(--blue-soft)' : ''; 
+                    let btnColor = j.isBlue ? (rowClass === 'row-blue' ? 'var(--blue-row)' : 'var(--green-row)') : ''; 
                     let pO = `<option value="">-- صنف --</option>` + userDB.products.map(p => `<option value="${p.name}" ${j.prod===p.name?'selected':''}>${p.name}</option>`).join('');
                     b.innerHTML += `
                     <tr class="${rowClass}">
