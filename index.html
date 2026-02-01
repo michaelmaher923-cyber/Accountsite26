@@ -427,7 +427,8 @@
                 userDB.journal.forEach((j, i) => {
                     let rowClass = j.isBlue ? 'trial-blue' : '';
                     let extraStyle = j.showExtra ? 'table-row' : 'none';
-                    let extraBg = j.isBlue ? 'var(--blue-soft)' : '#f0fdf4';
+                    // هنا خلينا لون زرار التلوين نفس لون الميزان الباهت، وصف المخزن يتبع لون القيد دايماً
+                    let btnColor = j.isBlue ? 'var(--blue-soft)' : ''; 
                     let pO = `<option value="">-- صنف --</option>` + userDB.products.map(p => `<option value="${p.name}" ${j.prod===p.name?'selected':''}>${p.name}</option>`).join('');
                     b.innerHTML += `
                     <tr class="${rowClass}">
@@ -440,12 +441,12 @@
                         <td><input type="text" placeholder="ملاحظة" value="${j.note||''}" onchange="userDB.journal[${i}].note=this.value"></td>
                         <td style="white-space:nowrap">
                             <button title="تفاصيل الصنف" onclick="userDB.journal[${i}].showExtra=!userDB.journal[${i}].showExtra;render('journalPage')" style="cursor:pointer; background:${j.showExtra?'#cbd5e1':''}">📦</button>
-                            <button title="تمييز القيد" onclick="userDB.journal[${i}].isBlue=!userDB.journal[${i}].isBlue;render('journalPage')" style="cursor:pointer; background:${j.isBlue?'#93c5fd':''}">🎨</button>
+                            <button title="تمييز القيد" onclick="userDB.journal[${i}].isBlue=!userDB.journal[${i}].isBlue;render('journalPage')" style="cursor:pointer; background:${btnColor}">🎨</button>
                             <button class="btn btn-ins" onclick="insertRow('jou', ${i})">➕</button>
                             <button class="btn btn-del" onclick="userDB.journal.splice(${i},1);render('journalPage')">🗑️</button>
                         </td>
                     </tr>
-                    <tr style="display:${extraStyle}; background:${extraBg};">
+                    <tr class="${rowClass}" style="display:${extraStyle};">
                         <td colspan="4" style="text-align:left; padding-left:20px;">الصنف: <select style="width:65%" onchange="updateRowPrice(${i}, this.value)">${pO}</select></td>
                         <td colspan="4" style="text-align:right; padding-right:20px;">الكمية: <input type="number" style="width:80px" id="q${i}" value="${j.q||0}" oninput="validateStock(${i})"></td>
                     </tr>`;
