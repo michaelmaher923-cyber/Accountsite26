@@ -25,7 +25,8 @@
         .btn-excel { background: #166534; color: white; margin-right: 5px; }
         .btn-import { background: #ea580c; color: white; margin-right: 5px; }
         .controls-row { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        .filter-select { width: 18px; height: 18px; padding: 0; margin-left: 5px; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 3px; background: #fff; font-size: 10px; vertical-align: middle; }
+        .filter-select { width: 16px; height: 16px; padding: 0; margin-top: 2px; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 3px; background: #fff; font-size: 9px; float: left; position: relative; z-index: 5; }
+        th { text-align: right; padding-left: 20px !important; }
         .filter-active { background-color: var(--accent) !important; color: white !important; }
         th { position: relative; }
         .highlight { background-color: #fef08a !important; transition: 0.3s; }
@@ -316,16 +317,23 @@
         window.applySmartFilter = function(bodyId) {
             const rows = document.getElementById(bodyId).rows;
             const filters = activeFilters[bodyId] || {};
+            
             for (let i = 0; i < rows.length; i++) {
+                // إذا كان صف تفاصيل المخزن يتبع حالة الصف الذي قبله
+                if (rows[i].cells.length < 5) {
+                    if (i > 0) rows[i].style.display = rows[i-1].style.display;
+                    continue;
+                }
+
                 let isVisible = true;
                 for (let colIndex in filters) {
                     const filterVal = filters[colIndex];
                     if (filterVal === "") continue;
                     const cell = rows[i].cells[colIndex];
-                    const val = (cell.querySelector('input') ? cell.querySelector('input').value : 
-                                 cell.querySelector('select') ? cell.querySelector('select').value : 
-                                 cell.textContent).trim();
-                    if (val !== filterVal) { isVisible = false; break; }
+                    if (!cell) continue;
+                    const input = cell.querySelector('input');
+                    const text = (input ? input.value : cell.textContent).trim();
+                    if (text !== filterVal) { isVisible = false; break; }
                 }
                 rows[i].style.display = isVisible ? "" : "none";
             }
@@ -333,32 +341,42 @@
 
         window.addFilterToHeader = function(bodyId) {
             const table = document.getElementById(bodyId).closest('table');
+            if (!table.tHead) return;
             const headerCells = table.tHead.rows[0].cells;
+            table.querySelectorAll('.filter-select').forEach(el => el.remove());
+
             for (let i = 0; i < headerCells.length - 1; i++) {
-                if (headerCells[i].querySelector('.filter-select')) continue;
                 const btn = document.createElement('select');
                 btn.className = 'filter-select';
+                btn.style.cssText = "float:left; width:16px; height:16px; font-size:9px; cursor:pointer;";
                 btn.innerHTML = '<option value="">▼</option>';
-                const rows = document.getElementById(bodyId).rows;
+                
+                const rows = Array.from(document.getElementById(bodyId).rows);
                 let uniqueValues = new Set();
-                for (let r = 0; r < rows.length; r++) {
-                    const cell = rows[r].cells[i];
-                    if (!cell) continue;
-                    const val = (cell.querySelector('input') ? cell.querySelector('input').value : cell.textContent).trim();
-                    if (val) uniqueValues.add(val);
-                }
-                uniqueValues.forEach(v => {
+                
+                rows.forEach(row => {
+                    if (row.cells.length < headerCells.length) return; 
+                    const cell = row.cells[i];
+                    if (cell) {
+                        const input = cell.querySelector('input');
+                        const val = (input ? input.value : cell.textContent).trim();
+                        if (val) uniqueValues.add(val);
+                    }
+                });
+
+                Array.from(uniqueValues).sort().forEach(v => {
                     const opt = document.createElement('option');
                     opt.value = v; opt.textContent = v;
                     btn.appendChild(opt);
                 });
+
                 btn.onchange = (e) => {
                     if (!activeFilters[bodyId]) activeFilters[bodyId] = {};
                     activeFilters[bodyId][i] = e.target.value;
                     e.target.classList.toggle('filter-active', e.target.value !== "");
                     applySmartFilter(bodyId);
                 };
-                headerCells[i].prepend(btn);
+                headerCells[i].appendChild(btn);
             }
         };
 
