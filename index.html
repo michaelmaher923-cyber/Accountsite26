@@ -390,10 +390,12 @@
             userDB.partnersInfo.forEach(p => { if(p.name) pl.innerHTML += `<option value="${p.name}">`; });
         };
 
-        window.getTrialBalances = function() {
+        window.getTrialBalances = function(fromDate = null, toDate = null) {
             let accs = {};
             userDB.accounts.forEach(a => { if(a.name) accs[a.name] = { d: 0, c: 0, type: a.type }; });
             userDB.journal.forEach(j => {
+                if (fromDate && j.date < fromDate) return;
+                if (toDate && j.date > toDate) return;
                 if(accs[j.deb]) accs[j.deb].d += parseFloat(j.v) || 0;
                 if(accs[j.cre]) accs[j.cre].c += parseFloat(j.v) || 0;
             });
@@ -405,8 +407,8 @@
             return res;
         };
 
-        window.calculateNetProfit = function() {
-            let b = getTrialBalances();
+        window.calculateNetProfit = function(fromDate = null, toDate = null) {
+            let b = getTrialBalances(fromDate, toDate);
             let s = (t) => b.filter(a => a.type === t).reduce((x, a) => x + Math.abs(a.balance), 0);
             return (s('مبيعات') - s('تكلفة مبيعات')) + s('إيرادات') - s('مصروفات');
         };
@@ -486,13 +488,50 @@
             }
             if(id === 'incomePage') {
                 const b = document.getElementById('incomeBody'); b.innerHTML = '';
-                let bl = getTrialBalances();
+                const pageContainer = document.getElementById('incomePage');
+                if(!document.getElementById('dateFilterContainer')) {
+                    const filterHtml = `
+                    <div id="dateFilterContainer" class="search-container" style="background:#e2e8f0; padding:15px; border-radius:8px; margin-bottom:20px;">
+                        <label><b>من تاريخ:</b> <input type="date" id="incomeFrom" style="width:150px" onchange="render('incomePage')"></label>
+                        <label><b>إلى تاريخ:</b> <input type="date" id="incomeTo" style="width:150px" onchange="render('incomePage')"></label>
+                        <button class="btn btn-excel" onclick="exportTableToExcel('incomeBody', 'قائمة_الدخل_التفصيلية')">تصدير Excel</button>
+                    </div>`;
+                    pageContainer.insertBefore(document.createRange().createContextualFragment(filterHtml), pageContainer.children[1]);
+                }
+                let fDate = document.getElementById('incomeFrom').value;
+                let tDate = document.getElementById('incomeTo').value;
+                let bl = getTrialBalances(fDate, tDate);
                 let sm = (t) => bl.filter(a => a.type === t).reduce((s, a) => s + Math.abs(a.balance), 0);
                 let m = sm('مبيعات'), c = sm('تكلفة مبيعات'), r = m - c, oR = sm('إيرادات'), oE = sm('مصروفات'), n = r + oR - oE;
                 let resText = n >= 0 ? "صافي الربح" : "صافي الخسارة";
                 let resColor = n >= 0 ? "#dcfce7" : "#fee2e2";
-                let textColor = n >= 0 ? "black" : "red";
-                b.innerHTML = `<tr><td>إجمالي المبيعات</td><td>${m}</td></tr><tr><td>(-) تكلفة البضاعة</td><td>${c}</td></tr><tr class="total-row"><td>مجمل الربح</td><td>${r}</td></tr><tr><td>(+) إيرادات</td><td>${oR}</td></tr><tr><td>(-) مصروفات</td><td>${oE}</td></tr><tr class="total-row" style="background:${resColor}; color:${textColor}"><td>${resText}</td><td>${n}</td></tr>`;
+                b.innerHTML = `
+                    <tr><th colspan="2" style="background:var(--main); color:white; padding:10px;">الملخص العام للفترة</th></tr>
+                    <tr><td>إجمالي المبيعات</td><td>${m}</td></tr>
+                    <tr><td>(-) تكلفة البضاعة المباعة</td><td>${c}</td></tr>
+                    <tr class="total-row"><td>مجمل الربح</td><td>${r}</td></tr>
+                    <tr><td>(+) إيرادات أخرى</td><td>${oR}</td></tr>
+                    <tr><td>(-) مصروفات إدارية وعمومية</td><td>${oE}</td></tr>
+                    <tr class="total-row" style="background:${resColor};"><td>${resText}</td><td>${n}</td></tr>
+                    <tr><td colspan="2" style="height:20px;"></td></tr>
+                    <tr><th colspan="2" style="background:var(--accent); color:white; padding:10px;">تحليل ربحية المنتجات (أرباح كل صنف)</th></tr>
+                    <tr style="background:#f1f5f9; font-weight:bold;"><td>اسم الصنف / المنتج</td><td>صافي الربح المحقق</td></tr>
+                `;
+                let prodProfits = {};
+                userDB.journal.forEach(j => {
+                    if (fDate && j.date < fDate) return;
+                    if (tDate && j.date > tDate) return;
+                    if (!j.prod) return;
+                    if (!prodProfits[j.prod]) prodProfits[j.prod] = 0;
+                    let debAcc = userDB.accounts.find(a => a.name === j.deb);
+                    let creAcc = userDB.accounts.find(a => a.name === j.cre);
+                    if (creAcc && creAcc.type === "مبيعات") prodProfits[j.prod] += (parseFloat(j.v) || 0);
+                    if (debAcc && debAcc.type === "تكلفة مبيعات") prodProfits[j.prod] -= (parseFloat(j.v) || 0);
+                });
+                for (let pName in prodProfits) {
+                    let prof = prodProfits[pName];
+                    b.innerHTML += `<tr><td>${pName}</td><td style="font-weight:bold; color:${prof>=0?'green':'red'}">${prof}</td></tr>`;
+                }
             }
             if(id === 'balanceSheetPage') {
                 let bl = getTrialBalances(), ab = document.getElementById('assetsBody'), lb = document.getElementById('liabilitiesBody');
