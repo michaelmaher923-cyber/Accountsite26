@@ -139,13 +139,26 @@
         <div class="table-container"><h3>دليل المتعاملين والديون</h3><button class="btn btn-add" onclick="addPartnerInfo()">+ إضافة بيانات متعامل</button><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>ملاحظات</th><th>مدين (+)</th><th>دائن (-)</th><th>الصافي</th><th>إجراء</th></tr></thead><tbody id="partnersBody"></tbody></table></div>
     </div>
 
-    <div id="trialPage" class="page">
-        <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
-        <div class="search-container">
-            <input type="text" class="search-input" placeholder="بحث في الميزان..." oninput="tableSearch('trialBody', this.value)">
-            <button class="btn btn-excel" onclick="exportTableToExcel('trialBody', 'ميزان_المراجعة')">تصدير Excel</button>
+    <div id="statementPage" class="page">
+        <button class="btn btn-add" onclick="openPage('partnersPage')">⬅ رجوع</button>
+        <button class="btn btn-excel" onclick="window.print()">🖨️ طباعة كشف الحساب</button>
+        <div class="table-container" id="printArea">
+            <h2 id="stName" style="text-align: center; color: var(--main); margin-bottom:5px;">كشف حساب</h2>
+            <p id="stDetails" style="text-align: center; margin-bottom:20px;">تقرير تفصيلي بالمعاملات الآجلة</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:100px">التاريخ</th>
+                        <th style="width:80px">رقم القيد</th>
+                        <th>البيان (ملاحظات)</th>
+                        <th style="width:90px">مدين (+)</th>
+                        <th style="width:90px">دائن (-)</th>
+                        <th style="width:100px">الرصيد الجاري</th>
+                    </tr>
+                </thead>
+                <tbody id="statementBody"></tbody>
+            </table>
         </div>
-        <div class="table-container"><table><thead><tr><th>الحساب</th><th>مدين</th><th>دائن</th><th>رصيد م</th><th>رصيد د</th></tr></thead><tbody id="trialBody"></tbody></table></div>
     </div>
     
     <div id="incomePage" class="page">
@@ -479,7 +492,18 @@
                 });
                 userDB.partnersInfo.forEach((p, i) => {
                     let d = pC[p.name] ? pC[p.name].d : 0, c = pC[p.name] ? pC[p.name].c : 0, net = d - c;
-                    b.innerHTML += `<tr><td><input value="${p.name||''}" onchange="userDB.partnersInfo[${i}].name=this.value;updateDatalists()"></td><td><input value="${p.phone||''}" onchange="userDB.partnersInfo[${i}].phone=this.value"></td><td><input value="${p.note||''}" onchange="userDB.partnersInfo[${i}].note=this.value"></td><td style="color:blue">${d}</td><td style="color:orange">${c}</td><td style="font-weight:bold; color:${net>=0?'green':'red'}">${net}</td><td><button class="btn btn-ins" onclick="insertRow('part', ${i})">➕</button><button class="btn btn-del" onclick="userDB.partnersInfo.splice(${i},1);render('partnersPage')">🗑️</button></td></tr>`;
+                    b.innerHTML += `<tr>
+                        <td><input value="${p.name||''}" onchange="userDB.partnersInfo[${i}].name=this.value;updateDatalists()"></td>
+                        <td><input value="${p.phone||''}" onchange="userDB.partnersInfo[${i}].phone=this.value"></td>
+                        <td><input value="${p.note||''}" onchange="userDB.partnersInfo[${i}].note=this.value"></td>
+                        <td style="color:blue">${d}</td>
+                        <td style="color:orange">${c}</td>
+                        <td style="font-weight:bold; color:${net>=0?'green':'red'}">${net}</td>
+                        <td style="white-space:nowrap">
+                            <button title="كشف حساب" onclick="viewStatement('${p.name}')" style="cursor:pointer; background:#e2e8f0; border:1px solid #94a3b8; border-radius:4px; padding:4px 8px;">🖨️</button>
+                            <button class="btn btn-ins" onclick="insertRow('part', ${i})">➕</button>
+                            <button class="btn btn-del" onclick="userDB.partnersInfo.splice(${i},1);render('partnersPage')">🗑️</button>
+                        </td></tr>`;
                 });
             }
             if(id === 'trialPage') {
@@ -611,6 +635,34 @@
         window.addJ = () => { userDB.journal.push({ref:'', date: new Date().toISOString().split('T')[0], q:0, v:0, deb:'', cre:'', name:'', prod:'', note:'', isBlue: false, showExtra: false}); render('journalPage'); };
         window.addP = () => { userDB.products.push({name:'', price:0}); render('productsPage'); };
         window.addPartnerInfo = () => { userDB.partnersInfo.push({name:'', phone:'', note:''}); render('partnersPage'); };
+                window.viewStatement = function(partnerName) {
+            if(!partnerName) return alert("يرجى إدخال اسم المتعامل أولاً");
+            openPage('statementPage');
+            document.getElementById('stName').innerText = "كشف حساب: " + partnerName;
+            const b = document.getElementById('statementBody'); b.innerHTML = '';
+            let runningBalance = 0;
+            userDB.journal.filter(j => j.name && j.name.trim() === partnerName.trim())
+            .sort((a, b) => new Date(a.date) - new Date(b.date))
+            .forEach(j => {
+                let v = parseFloat(j.v) || 0;
+                let debAmt = 0, creAmt = 0;
+                let debAcc = userDB.accounts.find(a => a.name === j.deb);
+                let creAcc = userDB.accounts.find(a => a.name === j.cre);
+                if(debAcc && ["مدينون", "دائنون"].includes(debAcc.type)) debAmt = v;
+                if(creAcc && ["مدينون", "دائنون"].includes(creAcc.type)) creAmt = v;
+                if(debAmt === 0 && creAmt === 0) return;
+                runningBalance += (debAmt - creAmt);
+                b.innerHTML += `<tr>
+                    <td>${j.date || ''}</td>
+                    <td>${j.ref || ''}</td>
+                    <td style="text-align:right;">${j.note || ''} ${j.prod ? ' - صنف: '+j.prod : ''}</td>
+                    <td style="color:blue">${debAmt > 0 ? debAmt : '-'}</td>
+                    <td style="color:red">${creAmt > 0 ? creAmt : '-'}</td>
+                    <td style="font-weight:bold; background:#f8fafc;">${runningBalance}</td>
+                </tr>`;
+            });
+            if(b.innerHTML === '') b.innerHTML = '<tr><td colspan="6">لا توجد معاملات مسجلة لهذا الاسم</td></tr>';
+        };
     })();
 </script>
 </body>
