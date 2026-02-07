@@ -161,31 +161,12 @@
         </div>
     </div>
     
-    <div id="trialPage" class="page">
+    <div id="incomePage" class="page">
         <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
         <div class="search-container">
-            <button class="btn btn-excel" onclick="exportTableToExcel('trialTable', 'ميزان_المراجعة')">تصدير Excel</button>
+            <button class="btn btn-excel" onclick="exportTableToExcel('incomeBody', 'قائمة_الدخل')">تصدير Excel</button>
         </div>
-        <div class="table-container">
-            <h2 style="text-align: center; color: var(--main);">⚖️ ميزان المراجعة</h2>
-            <table id="trialTable">
-                <thead>
-                    <tr>
-                        <th rowspan="2">اسم الحساب</th>
-                        <th colspan="2">المجاميع</th>
-                        <th colspan="2">الأرصدة</th>
-                    </tr>
-                    <tr>
-                        <th>مدين</th>
-                        <th>دائن</th>
-                        <th>مدين</th>
-                        <th>دائن</th>
-                    </tr>
-                </thead>
-                <tbody id="trialBody"></tbody>
-                <tfoot id="trialFoot"></tfoot>
-            </table>
-        </div>
+        <div class="table-container"><h2 style="text-align: center;">📊 قائمة الدخل</h2><table><tbody id="incomeBody"></tbody></table></div>
     </div>
 
     <div id="balanceSheetPage" class="page">
@@ -287,36 +268,16 @@
         const u = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value.trim();
         const isLogin = document.getElementById('loginTab').classList.contains('active');
-        
         if(!u || !p) return alert("⚠️ يرجى إدخال اسم المستخدم وكلمة المرور");
-
-        const userKey = prompt("الرجاء إدخال مفتاح التفعيل الأسبوعي:");
-        if (!userKey) return;
-
+        localStorage.setItem('user_display_name', u); 
         document.getElementById('loader').style.display = 'flex';
-
+        const safeUser = btoa(unescape(encodeURIComponent(u))).replace(/[/+=]/g, "").toLowerCase().substring(0, 15);
+        const email = safeUser + "@maher-system.com";
         try {
-            const codeSnap = await get(ref(db, 'systemConfig/weeklyCode'));
-            const validCode = codeSnap.val();
-
-            if (userKey !== String(validCode)) {
-                alert("❌ مفتاح التفعيل غير صحيح، يرجى التواصل مع الإدارة");
-                document.getElementById('loader').style.display = 'none';
-                return;
-            }
-
-            localStorage.setItem('user_display_name', u); 
-            const safeUser = btoa(unescape(encodeURIComponent(u))).replace(/[/+=]/g, "").toLowerCase().substring(0, 15);
-            const email = safeUser + "@maher-system.com";
-
-            if (isLogin) { 
-                await signInWithEmailAndPassword(auth, email, p); 
-            } else { 
-                await createUserWithEmailAndPassword(auth, email, p); 
-                alert("✅ تم التسجيل بنجاح"); 
-            }
+            if (isLogin) { await signInWithEmailAndPassword(auth, email, p); } 
+            else { await createUserWithEmailAndPassword(auth, email, p); alert("✅ تم التسجيل بنجاح"); }
         } catch (e) {
-            alert("حدث خطأ في الاتصال أو البيانات");
+            alert("حدث خطأ في البيانات");
             document.getElementById('loader').style.display = 'none';
         }
     };
@@ -546,49 +507,8 @@
                 });
             }
             if(id === 'trialPage') {
-                const b = document.getElementById('trialBody');
-                const f = document.getElementById('trialFoot');
-                
-                // التأكد من وجود العناصر لتجنب الصفحة الفارغة
-                if(!b || !f) return; 
-
-                b.innerHTML = ''; 
-                f.innerHTML = '';
-                
-                let balances = getTrialBalances();
-                let totals = { td: 0, tc: 0, bd: 0, bc: 0 };
-
-                balances.forEach(a => {
-                    // حساب الأرصدة (الصافي)
-                    let balD = a.balance > 0 ? a.balance : 0;
-                    let balC = a.balance < 0 ? Math.abs(a.balance) : 0;
-                    
-                    // تجميع الإجماليات لسطر النهاية
-                    totals.td += a.d; 
-                    totals.tc += a.c;
-                    totals.bd += balD; 
-                    totals.bc += balC;
-
-                    // إضافة صفوف الحسابات
-                    b.innerHTML += `
-                        <tr>
-                            <td style="text-align:right; font-weight:bold; padding-right:10px;">${a.name}</td>
-                            <td>${a.d.toLocaleString()}</td>
-                            <td>${a.c.toLocaleString()}</td>
-                            <td style="color:blue; font-weight:bold;">${balD > 0 ? balD.toLocaleString() : '-'}</td>
-                            <td style="color:red; font-weight:bold;">${balC > 0 ? balC.toLocaleString() : '-'}</td>
-                        </tr>`;
-                });
-
-                // إضافة سطر الإجمالي في تذييل الجدول
-                f.innerHTML = `
-                    <tr style="background:#f1f5f9; font-weight:bold; border-top:2px solid var(--main);">
-                        <td>الإجمالي النهائي</td>
-                        <td>${totals.td.toLocaleString()}</td>
-                        <td>${totals.tc.toLocaleString()}</td>
-                        <td style="color:blue">${totals.bd.toLocaleString()}</td>
-                        <td style="color:red">${totals.bc.toLocaleString()}</td>
-                    </tr>`;
+                const b = document.getElementById('trialBody'); b.innerHTML = '';
+                getTrialBalances().forEach(a => { b.innerHTML += `<tr><td class="trial-blue">${a.name}</td><td>${a.d}</td><td>${a.c}</td><td class="trial-blue">${a.balance>0?a.balance:0}</td><td class="trial-blue">${a.balance<0?Math.abs(a.balance):0}</td></tr>`; });
             }
             if(id === 'incomePage') {
                 const b = document.getElementById('incomeBody'); b.innerHTML = '';
