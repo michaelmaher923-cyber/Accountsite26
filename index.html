@@ -50,7 +50,8 @@
         <div id="registerTab" class="tab" onclick="switchAuth(false)">إنشاء حساب</div>
     </div>
     <input type="text" id="username" placeholder="اسم المستخدم" style="margin-bottom:15px; width:100%;">
-    <input type="password" id="password" placeholder="كلمة المرور" style="margin-bottom:5px; width:100%;">
+    <input type="password" id="password" placeholder="كلمة المرور" style="margin-bottom:15px; width:100%;">
+<input type="text" id="activationCode" placeholder="كود التحقق (المفتاح)" style="margin-bottom:5px; width:100%; border: 2px solid var(--accent);">
     <p style="font-size: 11px; color: var(--danger); margin-bottom: 10px;">* كلمة المرور يجب أن لا تقل عن 6 أحرف أو أرقام</p>
     <button class="btn btn-save" style="width:100%" onclick="processAuth()">دخول</button>
 </div>
@@ -234,16 +235,14 @@
 <datalist id="partnerList"></datalist>
 
 <script type="module">
-    <script type="module">
-    // التحقق من الرابط الأصلي
     const _0xTarget = atob('bWljaGFlbG1haGVyOTIzLWN5YmVyLmdpdGh1Yi5pbw==');
     if (window.location.hostname !== _0xTarget) {
-        document.body.innerHTML = '<div style="direction:rtl;text-align:center;padding:50px;font-family:sans-serif;"><h2>⚠️ نسخة غير مرخصة إلا على الرابط الأصلي أ مايكل ماهر</h2></div>';
+        document.body.innerHTML = '<div style="direction:rtl;text-align:center;padding:50px;font-family:sans-serif;"><h2>⚠️ نسخة غير مرخصة إلا على الرابط الأصلي              أ مايكل ماهر</h2></div>';
         window.stop();
     }
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const config = {
@@ -260,26 +259,6 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
 
-    // وظيفة التحقق من المفتاح الأسبوعي
-    async function checkWeeklyCode() {
-        try {
-            const snapshot = await get(ref(db, 'systemConfig/weeklyCode'));
-            const correctCode = snapshot.val();
-            
-            let userCode = prompt("🔑 يرجى إدخال مفتاح التشغيل الأسبوعي:");
-            
-            if (userCode !== String(correctCode)) {
-                alert("❌ مفتاح خاطئ! لا يمكنك استخدام التطبيق.");
-                document.body.innerHTML = "<h2 style='text-align:center; margin-top:50px;'>عذراً، المفتاح غير صحيح. تواصل مع الإدارة.</h2>";
-                return false;
-            }
-            return true;
-        } catch (e) {
-            alert("خطأ في الاتصال بالخادم للتحقق من المفتاح.");
-            return false;
-        }
-    }
-
     window.switchAuth = (isLogin) => {
         document.getElementById('loginTab').classList.toggle('active', isLogin);
         document.getElementById('registerTab').classList.toggle('active', !isLogin);
@@ -289,18 +268,20 @@
     window.processAuth = async () => {
         const u = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value.trim();
+        const inputCode = document.getElementById('activationCode').value.trim();
         const isLogin = document.getElementById('loginTab').classList.contains('active');
-        if(!u || !p) return alert("⚠️ يرجى إدخال اسم المستخدم وكلمة المرور");
-        
-        // التحقق من الكود قبل تسجيل الدخول
-        const isCodeValid = await checkWeeklyCode();
-        if(!isCodeValid) return;
-
-        localStorage.setItem('user_display_name', u); 
+        if(!u || !p || !inputCode) return alert("⚠️ يرجى إدخال اسم المستخدم وكلمة المرور وكود التحقق");
         document.getElementById('loader').style.display = 'flex';
-        const safeUser = btoa(unescape(encodeURIComponent(u))).replace(/[/+=]/g, "").toLowerCase().substring(0, 15);
-        const email = safeUser + "@maher-system.com";
         try {
+            const configSnapshot = await get(ref(db, `systemConfig/weeklyCode`));
+            const correctCode = configSnapshot.exists() ? configSnapshot.val().toString() : "";
+            if (inputCode !== correctCode) {
+                document.getElementById('loader').style.display = 'none';
+                return alert("❌ كود التحقق (المفتاح) غير صحيح!");
+            }
+            localStorage.setItem('user_display_name', u); 
+            const safeUser = btoa(unescape(encodeURIComponent(u))).replace(/[/+=]/g, "").toLowerCase().substring(0, 15);
+            const email = safeUser + "@maher-system.com";
             if (isLogin) { await signInWithEmailAndPassword(auth, email, p); } 
             else { await createUserWithEmailAndPassword(auth, email, p); alert("✅ تم التسجيل بنجاح"); }
         } catch (e) {
@@ -329,8 +310,6 @@
     };
 
     window.logout = () => { signOut(auth).then(() => location.reload()); };
-</script>
-
 </script>
 
 <script>
