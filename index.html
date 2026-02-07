@@ -282,7 +282,43 @@
         }
     };
 
+    const LOCK_ID = 'maher_system_2026_lock';
+
+    async function validateSystemAccess() {
+        const lastDate = localStorage.getItem(LOCK_ID);
+        const limit = 7 * 24 * 60 * 60 * 1000;
+        const now = new Date().getTime();
+
+        if (!lastDate || (now - lastDate > limit)) {
+            document.getElementById('activationArea').style.display = 'flex';
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('appScreen').style.display = 'none';
+            return false;
+        }
+        return true;
+    }
+
+    window.verifyCode = async function() {
+        const input = document.getElementById('activationCodeInput').value.trim();
+        if(!input) return;
+        try {
+            const snapshot = await get(ref(db, 'systemConfig/weeklyCode'));
+            const cloudCode = snapshot.val();
+            if (String(input) === String(cloudCode)) {
+                localStorage.setItem(LOCK_ID, new Date().getTime());
+                location.reload();
+            } else {
+                alert("❌");
+            }
+        } catch (e) {
+            alert("⚠️");
+        }
+    };
+
     onAuthStateChanged(auth, async (user) => {
+        const isReady = await validateSystemAccess();
+        if (!isReady) return;
+
         if (user) {
             const savedName = localStorage.getItem('user_display_name');
             window.currentUser = savedName || user.email.split('@')[0];
@@ -290,6 +326,9 @@
             const data = snapshot.exists() ? snapshot.val() : {};
             window.userDB = { accounts: data.accounts || [], journal: data.journal || [], products: data.products || [], partnersInfo: data.partnersInfo || [] };
             startApp();
+        } else {
+            document.getElementById('authScreen').style.display = 'block';
+            document.getElementById('activationArea').style.display = 'none';
         }
     });
 
@@ -515,6 +554,13 @@
                 const pageContainer = document.getElementById('incomePage');
                 if(!document.getElementById('dateFilterContainer')) {
                     const filterHtml = `
+                    <div id="activationArea" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#fff; z-index:10000; justify-content:center; align-items:center; flex-direction:column;">
+    <div style="font-size:50px; margin-bottom:20px;">🔒</div>
+    <h2 style="color:#1e293b">نظام التنشيط</h2>
+    <input type="text" id="activationCodeInput" placeholder="كود التفعيل" style="width:250px; padding:12px; margin-bottom:20px; text-align:center; border:2px solid #0284c7; border-radius:8px;">
+    <button class="btn btn-save" style="width:250px;" onclick="verifyCode()">دخول</button>
+</div>
+
                     <div id="dateFilterContainer" class="search-container" style="background:#e2e8f0; padding:15px; border-radius:8px; margin-bottom:20px;">
                         <label><b>من تاريخ:</b> <input type="date" id="incomeFrom" style="width:150px" onchange="render('incomePage')"></label>
                         <label><b>إلى تاريخ:</b> <input type="date" id="incomeTo" style="width:150px" onchange="render('incomePage')"></label>
