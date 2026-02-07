@@ -39,6 +39,7 @@
         #loader { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; justify-content:center; align-items:center; flex-direction:column; }
         .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .total-row { background: #f8fafc; font-weight: bold; }
+.trial-blue { color: #0284c7; font-weight: bold; background: #f0f9ff !important; }
     </style>
 </head>
 <body>
@@ -138,6 +139,24 @@
             <input type="file" id="filePart" hidden onchange="importData(this, 'partners')" accept=".xlsx, .xls">
         </div>
         <div class="table-container"><h3>دليل المتعاملين والديون</h3><button class="btn btn-add" onclick="addPartnerInfo()">+ إضافة بيانات متعامل</button><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>ملاحظات</th><th>مدين (+)</th><th>دائن (-)</th><th>الصافي</th><th>إجراء</th></tr></thead><tbody id="partnersBody"></tbody></table></div>
+    </div>
+    <div id="trialPage" class="page">
+        <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
+        <div class="table-container">
+            <h2 style="text-align: center;">⚖️ ميزان المراجعة</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>اسم الحساب</th>
+                        <th>إجمالي مدين</th>
+                        <th>إجمالي دائن</th>
+                        <th>رصيد مدين</th>
+                        <th>رصيد دائن</th>
+                    </tr>
+                </thead>
+                <tbody id="trialBody"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="statementPage" class="page">
