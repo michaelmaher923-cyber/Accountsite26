@@ -45,68 +45,15 @@
 <div id="loader"><b>⏳ جاري الاتصال...</b></div>
 <div id="authScreen" class="auth-box">
     <div class="logo-img" style="margin: 0 auto 20px; width: 60px; height: 60px; font-size: 30px;">📈</div>
-    
-    <div id="lockMessage" style="display:none; background:#fff1f2; color:#be123c; padding:15px; border-radius:10px; margin-bottom:15px; border: 1px solid #fecdd3; line-height: 1.6;">
-        <p style="margin:0 0 10px 0; font-weight:bold;">⚠️ تنبيه: يتطلب الدخول تنشيطاً أسبوعياً</p>
-        <p style="font-size: 12px; margin-bottom: 10px;">يرجى دعمنا بالضغط على الرابط بالأسفل لتفعيل البرنامج لمدة 7 أيام:</p>
-        <a href="https://short-jambo.ink/Accountsite26" target="_blank" onclick="registerClick()" 
-           style="display:block; background:#be123c; color:white; text-decoration:none; padding:10px; border-radius:5px; font-weight:bold; transition: 0.3s;">
-           إضغط هنا لتنشيط الدخول 🔗
-        </a>
-    </div>
-
     <div class="tabs">
         <div id="loginTab" class="tab active" onclick="switchAuth(true)">تسجيل الدخول</div>
         <div id="registerTab" class="tab" onclick="switchAuth(false)">إنشاء حساب</div>
     </div>
-    
     <input type="text" id="username" placeholder="اسم المستخدم" style="margin-bottom:15px; width:100%;">
     <input type="password" id="password" placeholder="كلمة المرور" style="margin-bottom:5px; width:100%;">
     <p style="font-size: 11px; color: var(--danger); margin-bottom: 10px;">* كلمة المرور يجب أن لا تقل عن 6 أحرف أو أرقام</p>
-    
-    <button id="loginBtn" class="btn btn-save" style="width:100%" onclick="processAuth()">دخول</button>
+    <button class="btn btn-save" style="width:100%" onclick="processAuth()">دخول</button>
 </div>
-
-<script>
-    // نظام التحكم في القفل بالمتصفح
-    window.registerClick = function() {
-        const now = new Date().getTime();
-        localStorage.setItem('activation_final_v1', now);
-        alert("✅ تم التنشيط بنجاح! يمكنك الآن تسجيل الدخول.");
-        // تحديث الحالة فوراً ليفتح الزر
-        setTimeout(checkLockStatus, 500);
-    };
-
-    window.checkLockStatus = function() {
-        const lastClick = localStorage.getItem('activation_final_v1');
-        const loginBtn = document.getElementById('loginBtn');
-        const lockMsg = document.getElementById('lockMessage');
-        const sevenDays = 7 * 24 * 60 * 60 * 1000; // مدة الأسبوع بالملي ثانية
-        const now = new Date().getTime();
-
-        if (!lastClick || (now - lastClick > sevenDays)) {
-            if(loginBtn) {
-                loginBtn.disabled = true;
-                loginBtn.style.opacity = "0.3";
-                loginBtn.style.cursor = "not-allowed";
-            }
-            if(lockMsg) lockMsg.style.display = "block";
-        } else {
-            if(loginBtn) {
-                loginBtn.disabled = false;
-                loginBtn.style.opacity = "1";
-                loginBtn.style.cursor = "pointer";
-            }
-            if(lockMsg) lockMsg.style.display = "none";
-        }
-    };
-
-    // تشغيل الفحص عند تحميل الصفحة وعند العودة إليها
-    window.addEventListener('load', checkLockStatus);
-    document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'visible') checkLockStatus();
-    });
-</script>
 <div id="appScreen" style="display:none;">
     <header>
         <div style="display:flex; align-items:center; gap:12px;"><div class="logo-img">📉</div><h2 style="margin:0">المحاسب</h2></div>
