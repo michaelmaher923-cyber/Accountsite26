@@ -52,7 +52,8 @@
     </div>
     <input type="text" id="username" placeholder="اسم المستخدم" style="margin-bottom:15px; width:100%;">
     <input type="password" id="password" placeholder="كلمة المرور" style="margin-bottom:15px; width:100%;">
-<input type="text" id="activationCode" placeholder="كود التحقق (المفتاح)" style="margin-bottom:5px; width:100%; border: 2px solid var(--accent);">
+<input type="text" id="activationCode" placeholder="أدخل كود التفعيل الأسبوعي" style="margin-bottom:5px; width:100%; border: 2px solid var(--accent);">
+<a href="https://short-jambo.ink/WeeklyAccountanysite26" target="_blank" style="display: block; font-size: 13px; color: var(--accent); margin-bottom: 15px; text-decoration: none; font-weight: bold;">اضغط هنا للحصول على كود تفعيل الأسبوع (مجاناً)</a>
     <p style="font-size: 11px; color: var(--danger); margin-bottom: 10px;">* كلمة المرور يجب أن لا تقل عن 6 أحرف أو أرقام</p>
     <button class="btn btn-save" style="width:100%" onclick="processAuth()">دخول</button>
 </div>
@@ -296,7 +297,11 @@
             const correctCode = configSnapshot.exists() ? configSnapshot.val().toString() : "";
             if (inputCode !== correctCode) {
                 document.getElementById('loader').style.display = 'none';
-                return alert("❌ كود التحقق (المفتاح) غير صحيح!");
+                {
+    document.getElementById('loader').style.display = 'none';
+    alert("❌ كود التفعيل خطأ! اضغط على رابط 'الحصول على الكود' أسفل الخانة للحصول على كود الأسبوع الجديد.");
+    return;
+}
             }
             localStorage.setItem('user_display_name', u); 
             const safeUser = btoa(unescape(encodeURIComponent(u))).replace(/[/+=]/g, "").toLowerCase().substring(0, 15);
