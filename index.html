@@ -234,10 +234,9 @@
 <datalist id="partnerList"></datalist>
 
 <script type="module">
-<script type="module">
     const _0xTarget = atob('bWljaGFlbG1haGVyOTIzLWN5YmVyLmdpdGh1Yi5pbw==');
     if (window.location.hostname !== _0xTarget) {
-        document.body.innerHTML = '<div style="direction:rtl;text-align:center;padding:50px;font-family:sans-serif;"><h2>⚠️ نسخة غير مرخصة إلا على الرابط الأصلي أ مايكل ماهر</h2></div>';
+        document.body.innerHTML = '<div style="direction:rtl;text-align:center;padding:50px;font-family:sans-serif;"><h2>⚠️ نسخة غير مرخصة إلا على الرابط الأصلي              أ مايكل ماهر</h2></div>';
         window.stop();
     }
 
@@ -259,11 +258,6 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
 
-    // جعل الوظائف متاحة عالمياً لتعمل مع الـ HTML
-    window.db = db;
-    window.ref = ref;
-    window.get = get;
-
     window.switchAuth = (isLogin) => {
         document.getElementById('loginTab').classList.toggle('active', isLogin);
         document.getElementById('registerTab').classList.toggle('active', !isLogin);
@@ -273,72 +267,76 @@
     window.processAuth = async () => {
         const u = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value.trim();
-        if(!u || !p) return alert("⚠️ يرجى إدخال اسم المستخدم وكلمة المرور");
-        
-        const userKeyCode = prompt("الرجاء إدخال كود التفعيل الأسبوعي:");
-        if(!userKeyCode) return alert("⚠️ يجب إدخال كود التفعيل");
-
-        document.getElementById('loader').style.display = 'flex';
         const isLogin = document.getElementById('loginTab').classList.contains('active');
-
+        if(!u || !p) return alert("⚠️ يرجى إدخال اسم المستخدم وكلمة المرور");
+        localStorage.setItem('user_display_name', u); 
+        document.getElementById('loader').style.display = 'flex';
+        const safeUser = btoa(unescape(encodeURIComponent(u))).replace(/[/+=]/g, "").toLowerCase().substring(0, 15);
+        const email = safeUser + "@maher-system.com";
         try {
-            // جلب الكود من المسار الصحيح في قاعدة البيانات
-            const snapshot = await get(ref(db, 'systemConfig/weeklyCode'));
-            const masterCode = snapshot.val();
-
-            if (userKeyCode != masterCode) {
-                document.getElementById('loader').style.display = 'none';
-                return alert("❌ كود التفعيل غير صحيح!");
-            }
-
-            localStorage.setItem('user_display_name', u); 
-            const safeUser = btoa(unescape(encodeURIComponent(u))).replace(/[/+=]/g, "").toLowerCase().substring(0, 15);
-            const email = safeUser + "@maher-system.com";
-
-            if (isLogin) { 
-                await signInWithEmailAndPassword(auth, email, p); 
-            } else { 
-                await createUserWithEmailAndPassword(auth, email, p); 
-                alert("✅ تم التسجيل بنجاح"); 
-            }
+            if (isLogin) { await signInWithEmailAndPassword(auth, email, p); } 
+            else { await createUserWithEmailAndPassword(auth, email, p); alert("✅ تم التسجيل بنجاح"); }
         } catch (e) {
-            console.error(e);
-            alert("حدث خطأ في البيانات أو الكود");
+            alert("حدث خطأ في البيانات");
             document.getElementById('loader').style.display = 'none';
         }
     };
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            const savedName = localStorage.getItem('user_display_name');
-            window.currentUser = savedName || user.email.split('@')[0];
-            const snapshot = await get(ref(db, `users/${user.uid}/data`));
-            const data = snapshot.exists() ? snapshot.val() : {};
-            window.userDB = { 
-                accounts: data.accounts || [], 
-                journal: data.journal || [], 
-                products: data.products || [], 
-                partnersInfo: data.partnersInfo || [] 
-            };
-            startApp();
+            document.getElementById('loader').style.display = 'flex';
+            document.getElementById('loader').innerHTML = '<b>⏳ جاري التحقق من صلاحية النسخة...</b>';
+            
+            try {
+                // جلب المفتاح من السيرفر
+                const configSnapshot = await get(ref(db, `systemConfig`));
+                const serverKey = configSnapshot.exists() ? configSnapshot.val().weeklyCode : null;
+
+                // التحقق من أن المفتاح يطابق الكلمة المطلوبة
+                if (serverKey === "phishing") {
+                    const savedName = localStorage.getItem('user_display_name');
+                    window.currentUser = savedName || user.email.split('@')[0];
+                    
+                    // جلب بيانات المستخدم
+                    const snapshot = await get(ref(db, `users/${user.uid}/data`));
+                    const data = snapshot.exists() ? snapshot.val() : {};
+                    
+                    // ملء قاعدة البيانات المحلية
+                    window.userDB = { 
+                        accounts: data.accounts || [], 
+                        journal: data.journal || [], 
+                        products: data.products || [], 
+                        partnersInfo: data.partnersInfo || [] 
+                    };
+                    
+                    // تشغيل التطبيق بعد التأكد من البيانات
+                    startApp();
+                } else {
+                    // في حال كان المفتاح خطأ في السيرفر
+                    document.body.innerHTML = `
+                        <div style="direction:rtl; text-align:center; padding:50px; font-family:sans-serif;">
+                            <h2 style="color:var(--danger);">⚠️ النسخة غير مفعلة</h2>
+                            <p>المفتاح الحالي في السيرفر غير مطابق. يرجى مراجعة الإدارة.</p>
+                            <button class="btn btn-add" onclick="location.reload()">إعادة محاولة</button>
+                        </div>`;
+                }
+            } catch (error) {
+                console.error(error);
+                alert("فشل في الاتصال بقاعدة البيانات للتحقق من المفتاح");
+            }
+            document.getElementById('loader').style.display = 'none';
         }
     });
 
     window.syncToCloud = async () => {
         if(!auth.currentUser) return;
         document.getElementById('loader').style.display = 'flex';
-        try { 
-            await set(ref(db, `users/${auth.currentUser.uid}/data`), window.userDB); 
-            alert("✅ تم الحفظ بنجاح"); 
-        } catch (e) { 
-            alert("❌ فشل الحفظ"); 
-        }
+        try { await set(ref(db, `users/${auth.currentUser.uid}/data`), window.userDB); alert("✅ تم الحفظ بنجاح"); } 
+        catch (e) { alert("❌ فشل الحفظ"); }
         document.getElementById('loader').style.display = 'none';
     };
 
     window.logout = () => { signOut(auth).then(() => location.reload()); };
-</script>
-
 </script>
 
 <script>
