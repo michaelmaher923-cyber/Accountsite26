@@ -71,14 +71,14 @@
     // نظام التحكم في القفل بالمتصفح
     window.registerClick = function() {
         const now = new Date().getTime();
-        localStorage.setItem('last_activation_26', now);
+        localStorage.setItem('activation_final_v1', now);
         alert("✅ تم التنشيط بنجاح! يمكنك الآن تسجيل الدخول.");
         // تحديث الحالة فوراً ليفتح الزر
         setTimeout(checkLockStatus, 500);
     };
 
     window.checkLockStatus = function() {
-        const lastClick = localStorage.getItem('last_activation_26');
+        const lastClick = localStorage.getItem('activation_final_v1');
         const loginBtn = document.getElementById('loginBtn');
         const lockMsg = document.getElementById('lockMessage');
         const sevenDays = 7 * 24 * 60 * 60 * 1000; // مدة الأسبوع بالملي ثانية
