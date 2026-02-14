@@ -52,11 +52,11 @@
     </div>
     <input type="text" id="username" placeholder="اسم المستخدم" style="margin-bottom:15px; width:100%;">
     <input type="password" id="password" placeholder="كلمة المرور" style="margin-bottom:15px; width:100%;">
-<label style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; font-size: 14px; color: var(--main); cursor: pointer; justify-content: center;">
-    <input type="checkbox" id="rememberMe" style="width: auto; margin: 0;"> ابقني مسجلاً
-</label>
+    <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; font-size: 14px; color: var(--main); cursor: pointer; justify-content: center;">
+        <input type="checkbox" id="rememberMe" style="width: auto; margin: 0;"> ابقني مسجلاً
+    </label>
     <p style="font-size: 11px; color: var(--danger); margin-bottom: 10px;">* كلمة المرور يجب أن لا تقل عن 6 أحرف أو أرقام</p>
-    <button class="btn btn-save" style="width:100%" onclick="processAuth()">دخول</button>
+    <button type="button" class="btn btn-save" style="width:100%" onclick="window.processAuth()">دخول</button>
 </div>
 <div id="appScreen" style="display:none;">
     <header>
@@ -307,6 +307,26 @@
     };
 
     window.logout = () => { signOut(auth).then(() => location.reload()); };
+        window.processAuth = async () => {
+        const u = document.getElementById('username').value.trim();
+        const p = document.getElementById('password').value.trim();
+        const isLogin = document.getElementById('loginTab').classList.contains('active');
+        if(!u || !p) return alert("⚠️ يرجى إدخال اسم المستخدم وكلمة المرور");
+        document.getElementById('loader').style.display = 'flex';
+        try {
+            localStorage.setItem('user_display_name', u); 
+            if(document.getElementById('rememberMe') && document.getElementById('rememberMe').checked) {
+                localStorage.setItem('keepLoggedIn', 'true');
+            }
+            const safeUser = btoa(unescape(encodeURIComponent(u))).replace(/[/+=]/g, "").toLowerCase().substring(0, 15);
+            const email = safeUser + "@maher-system.com";
+            if (isLogin) { await signInWithEmailAndPassword(auth, email, p); } 
+            else { await createUserWithEmailAndPassword(auth, email, p); alert("✅ تم التسجيل بنجاح"); }
+        } catch (e) {
+            alert("❌ خطأ: تأكد من البيانات أو طول كلمة المرور (6 حروف فأكثر)");
+            document.getElementById('loader').style.display = 'none';
+        }
+    };
 </script>
 
 <script>
@@ -439,21 +459,21 @@
             render(document.querySelector('.page.active').id);
         };
 
-            window.render = function(id) {
-        // قفل التقارير بكود تفعيل
-        const reports = ['trialPage', 'incomePage', 'balanceSheetPage'];
-        if (reports.includes(id)) {
-            const pass = prompt("🔐 هذه التقارير الختامية تتطلب كود التفعيل.
+        window.render = function(id) {
+            const reports = ['trialPage', 'incomePage', 'balanceSheetPage'];
+            if (reports.includes(id)) {
+                const msg = "🔐 هذه التقارير الختامية تتطلب كود التفعيل.
 للحصول عليه مجاناً، اذهب للرابط التالي:
 https://short-jambo.ink/WeeklyAccountanysite26
 
-أدخل الكود هنا:");
-            if (pass !== "2026") { 
-                alert("❌ كود التفعيل غير صحيح!");
-                openPage('homePage');
-                return;
+أدخل الكود هنا:";
+                const pass = prompt(msg);
+                if (pass !== "2026") { 
+                    alert("❌ كود التفعيل غير صحيح!");
+                    openPage('homePage');
+                    return;
+                }
             }
-        }
             if(id === 'accountsPage') {
                 const b = document.getElementById('accountsBody'); b.innerHTML = '';
                 userDB.accounts.forEach((a, i) => {
