@@ -712,30 +712,33 @@
             if(b.innerHTML === '') b.innerHTML = '<tr><td colspan="6">لا توجد معاملات مسجلة لهذا الاسم</td></tr>';
         };
     })();
-window.filterJournalByColumn = function(colIdx, value) {
-    const table = document.getElementById("journalBody");
-    const rows = Array.from(table.children);
-    const q = value.toLowerCase();
-
-    rows.forEach((row, index) => {
-        // نفلتر الصفوف الأساسية فقط (التي تحتوي على 8 أعمدة)
-        if (row.cells.length === 8) {
-            const cell = row.cells[colIdx];
-            const input = cell.querySelector('input');
-            const cellText = input ? input.value.toLowerCase() : cell.textContent.toLowerCase();
-
-            if (cellText.includes(q)) {
-                row.style.display = "";
-            } else {
-                row.style.display = "none";
-                // إخفاء صف التفاصيل المرتبط به لو كان مخفي
-                if (rows[index + 1] && rows[index + 1].cells.length < 8) {
-                    rows[index + 1].style.display = "none";
+        window.journalFilters = {}; 
+        window.filterJournalByCols = function(colIdx, val) {
+            window.journalFilters[colIdx] = val.toLowerCase();
+            const rows = document.querySelectorAll('#journalBody tr');
+            rows.forEach(row => {
+                // تجاهل صفوف تفاصيل الأصناف
+                if(row.cells.length < 5) {
+                    row.style.display = 'none';
+                    return;
                 }
-            }
-        }
-    });
-};
+                let isVisible = true;
+                // فحص كل عمود بناءً على الفلاتر النشطة
+                for (let idx in window.journalFilters) {
+                    const filterVal = window.journalFilters[idx];
+                    if (!filterVal) continue;
+                    const cell = row.cells[idx];
+                    const input = cell.querySelector('input');
+                    const cellValue = input ? input.value.toLowerCase() : cell.textContent.toLowerCase();
+                    if (!cellValue.includes(filterVal)) {
+                        isVisible = false;
+                        break;
+                    }
+                }
+                row.style.display = isVisible ? '' : 'none';
+            });
+        };
+
 </script>
 </body>
 </html>
