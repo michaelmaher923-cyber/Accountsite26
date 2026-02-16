@@ -555,15 +555,19 @@
                         <div style="display:flex; align-items:flex-end;"><button class="btn btn-excel" style="width:100%" onclick="exportTableToExcel('incomeBody', 'تحليل_الأرباح_المفصل')">تصدير التحليل</button></div>
                     </div>`;
                     pageContainer.insertBefore(document.createRange().createContextualFragment(filterHtml), pageContainer.children[1]);
-                    const pSel = document.getElementById('filterPartner');
-                    userDB.partnersInfo.forEach(p => pSel.innerHTML += `<option value="${p.name}">${p.name}</option>`);
-                    const prodSel = document.getElementById('filterProduct');
-                    userDB.products.forEach(p => prodSel.innerHTML += `<option value="${p.name}">${p.name}</option>`);
                 }
+                const pSel = document.getElementById('filterPartner');
+                const currentP = pSel.value; pSel.innerHTML = '<option value="">الكل</option>';
+                userDB.partnersInfo.forEach(p => pSel.innerHTML += `<option value="${p.name}" ${currentP===p.name?'selected':''}>${p.name}</option>`);
+                const prodSel = document.getElementById('filterProduct');
+                const currentProd = prodSel.value; prodSel.innerHTML = '<option value="">الكل</option>';
+                userDB.products.forEach(p => prodSel.innerHTML += `<option value="${p.name}" ${currentProd===p.name?'selected':''}>${p.name}</option>`);
+
                 let fDate = document.getElementById('incomeFrom').value;
                 let tDate = document.getElementById('incomeTo').value;
                 let fPart = document.getElementById('filterPartner').value;
                 let fProd = document.getElementById('filterProduct').value;
+                
                 let filteredJournal = userDB.journal.filter(j => {
                     let matchDate = (!fDate || j.date >= fDate) && (!tDate || j.date <= tDate);
                     let matchPart = (!fPart || (j.name && j.name.trim() === fPart.trim()));
@@ -703,8 +707,8 @@
                     <td>${j.date || ''}</td>
                     <td>${j.ref || ''}</td>
                     <td style="text-align:right;">${(j.note || '') + itemDetail}</td>
-                    <td style="color:blue">${debAmt > 0 ? debAmt : '-'}</td>
-                    <td style="color:red">${creAmt > 0 ? creAmt : '-'}</td>
+                    <td style="color:blue">${debAmt > 0 ? debAmt.toLocaleString() : '-'}</td>
+                    <td style="color:red">${creAmt > 0 ? creAmt.toLocaleString() : '-'}</td>
                     <td style="font-weight:bold; background:#f8fafc;">${runningBalance.toLocaleString()}</td>
                 </tr>`;
             });
