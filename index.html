@@ -94,52 +94,25 @@
 
     <div id="journalPage" class="page">
         <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
-        
-        <div id="jouAdvancedFilter" class="search-container" style="background:#f1f5f9; padding:15px; border-radius:12px; margin-bottom:20px; display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:10px; border:1px solid var(--accent); border-right: 5px solid var(--accent);">
-            <label><b>🔍 بحث نصي:</b> <input type="text" id="jouSearch" placeholder="ابحث هنا..." oninput="filterJournal()"></label>
-            <label><b>📅 من تاريخ:</b> <input type="date" id="jouFromDate" onchange="filterJournal()"></label>
-            <label><b>📅 إلى تاريخ:</b> <input type="date" id="jouToDate" onchange="filterJournal()"></label>
-            <label><b>👤 العميل:</b> <select id="jouFilterPartner" onchange="filterJournal()" style="width:100%"><option value="">الكل</option></select></label>
-            <label><b>📦 المنتج:</b> <select id="jouFilterProduct" onchange="filterJournal()" style="width:100%"><option value="">الكل</option></select></label>
-            <div style="display:flex; align-items:flex-end; gap:5px;">
-                <button class="btn btn-excel" style="flex:1" onclick="exportData('journal')">Excel</button>
-                <button class="btn btn-import" style="flex:1" onclick="document.getElementById('fileJou').click()">استيراد</button>
-            </div>
+        <div class="search-container" style="background: #f1f5f9; padding: 15px; border-radius: 10px; flex-wrap: wrap;">
+            <input type="text" class="search-input" id="jouSearch" placeholder="بحث (اسم، حساب، ملاحظة...)" oninput="filterJournal()">
+            <input type="date" id="jouDateFilter" onchange="filterJournal()" style="width:150px">
+            <button class="btn btn-excel" onclick="exportData('journal')">تصدير Excel</button>
+            <button class="btn btn-import" onclick="document.getElementById('fileJou').click()">استيراد Excel</button>
             <input type="file" id="fileJou" hidden onchange="importData(this, 'journal')" accept=".xlsx, .xls">
         </div>
-
-        <div class="table-container">
-            <button class="btn btn-add" onclick="addJ()">+ قيد جديد</button>
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 60px;">رقم القيد</th>
-                        <th>التاريخ</th>
-                        <th>مدين</th>
-                        <th>دائن</th>
-                        <th>الاسم</th>
-                        <th>المبلغ</th>
-                        <th>ملاحظات</th>
-                        <th>إجراء</th>
-                    </tr>
-                </thead>
-                <tbody id="journalBody"></tbody>
-            </table>
-        </div>
-    </div>
-
         <div class="table-container">
     <button class="btn btn-add" onclick="addJ()">+ قيد جديد</button>
     <table>
         <thead>
             <tr>
-                <th style="width: 60px;">رقم القيد</th>
-                <th>التاريخ</th>
-                <th>مدين</th>
-                <th>دائن</th>
-                <th>الاسم</th>
-                <th>المبلغ</th>
-                <th>ملاحظات</th>
+                <th style="width: 60px;">رقم القيد<br><input type="text" placeholder="🔎" oninput="filterJournalByColumn(0, this.value)" style="width:90%; font-size:10px; margin-top:5px;"></th>
+                <th>التاريخ<br><input type="text" placeholder="🔎" oninput="filterJournalByColumn(1, this.value)" style="width:90%; font-size:10px; margin-top:5px;"></th>
+                <th>مدين<br><input type="text" placeholder="🔎" oninput="filterJournalByColumn(2, this.value)" style="width:90%; font-size:10px; margin-top:5px;"></th>
+                <th>دائن<br><input type="text" placeholder="🔎" oninput="filterJournalByColumn(3, this.value)" style="width:90%; font-size:10px; margin-top:5px;"></th>
+                <th>الاسم<br><input type="text" placeholder="🔎" oninput="filterJournalByColumn(4, this.value)" style="width:90%; font-size:10px; margin-top:5px;"></th>
+                <th>المبلغ<br><input type="text" placeholder="🔎" oninput="filterJournalByColumn(5, this.value)" style="width:90%; font-size:10px; margin-top:5px;"></th>
+                <th>ملاحظات<br><input type="text" placeholder="🔎" oninput="filterJournalByColumn(6, this.value)" style="width:90%; font-size:10px; margin-top:5px;"></th>
                 <th>إجراء</th>
             </tr>
         </thead>
@@ -739,73 +712,30 @@
             if(b.innerHTML === '') b.innerHTML = '<tr><td colspan="6">لا توجد معاملات مسجلة لهذا الاسم</td></tr>';
         };
     })();
-window.filterJournal = function() {
-    const query = document.getElementById('jouSearch').value.toLowerCase();
-    const fromDate = document.getElementById('jouFromDate').value;
-    const toDate = document.getElementById('jouToDate').value;
-    const fPart = document.getElementById('jouFilterPartner').value;
-    const fProd = document.getElementById('jouFilterProduct').value;
-    
-    const rows = document.querySelectorAll('#journalBody tr');
+window.filterJournalByColumn = function(colIdx, value) {
+    const table = document.getElementById("journalBody");
+    const rows = Array.from(table.children);
+    const q = value.toLowerCase();
 
-    for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
-        
-        if (row.cells.length >= 7) {
-            const dateInput = row.cells[1].querySelector('input');
-            const dateVal = dateInput ? dateInput.value : "";
-            const nameInput = row.cells[4].querySelector('input');
-            const nameVal = nameInput ? nameInput.value.trim() : "";
-            const textContent = row.innerText.toLowerCase();
-            const detailRow = rows[i+1];
-            
-            const matchText = textContent.includes(query);
-            const matchFrom = !fromDate || dateVal >= fromDate;
-            const matchTo = !toDate || dateVal <= toDate;
-            const matchPart = !fPart || nameVal === fPart;
-            
-            let matchProd = !fProd;
-            if (fProd && detailRow && detailRow.cells.length < 5) {
-                const prodSelect = detailRow.querySelector('select');
-                if (prodSelect && prodSelect.value === fProd) matchProd = true;
-            }
+    rows.forEach((row, index) => {
+        // نفلتر الصفوف الأساسية فقط (التي تحتوي على 8 أعمدة)
+        if (row.cells.length === 8) {
+            const cell = row.cells[colIdx];
+            const input = cell.querySelector('input');
+            const cellText = input ? input.value.toLowerCase() : cell.textContent.toLowerCase();
 
-            if (matchText && matchFrom && matchTo && matchPart && matchProd) {
-                row.style.display = '';
-                if (detailRow && detailRow.cells.length < 5) {
-                    const btn = row.querySelector('button[title="تفاصيل الصنف"]');
-                    const isExpanded = btn && btn.style.background.includes('rgb'); // فحص حالة اللون كدليل للفتح
-                    detailRow.style.display = isExpanded ? 'table-row' : 'none';
-                }
+            if (cellText.includes(q)) {
+                row.style.display = "";
             } else {
-                row.style.display = 'none';
-                if (detailRow && detailRow.cells.length < 5) detailRow.style.display = 'none';
+                row.style.display = "none";
+                // إخفاء صف التفاصيل المرتبط به لو كان مخفي
+                if (rows[index + 1] && rows[index + 1].cells.length < 8) {
+                    rows[index + 1].style.display = "none";
+                }
             }
-            if (detailRow && detailRow.cells.length < 5) i++;
         }
-    }
+    });
 };
-
-// إضافة دالة لتحديث قوائم الفلتر المربعة عند فتح الصفحة
-const wrapRender = window.render;
-window.render = function(id) {
-    wrapRender(id);
-    if(id === 'journalPage') {
-        const pSel = document.getElementById('jouFilterPartner');
-        const prodSel = document.getElementById('jouFilterProduct');
-        if(pSel) {
-            const current = pSel.value;
-            pSel.innerHTML = '<option value="">الكل</option>';
-            userDB.partnersInfo.forEach(p => pSel.innerHTML += `<option value="${p.name}" ${p.name===current?'selected':''}>${p.name}</option>`);
-        }
-        if(prodSel) {
-            const currentP = prodSel.value;
-            prodSel.innerHTML = '<option value="">الكل</option>';
-            userDB.products.forEach(p => prodSel.innerHTML += `<option value="${p.name}" ${p.name===currentP?'selected':''}>${p.name}</option>`);
-        }
-    }
-};
-
 </script>
 </body>
 </html>
