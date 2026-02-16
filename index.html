@@ -94,8 +94,9 @@
 
     <div id="journalPage" class="page">
         <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
-        <div class="search-container">
-            <input type="text" class="search-input" placeholder="بحث في اليومية..." oninput="tableSearch('journalBody', this.value)">
+        <div class="search-container" style="background: #f1f5f9; padding: 15px; border-radius: 10px; flex-wrap: wrap;">
+            <input type="text" class="search-input" id="jouSearch" placeholder="بحث (اسم، حساب، ملاحظة...)" oninput="filterJournal()">
+            <input type="date" id="jouDateFilter" onchange="filterJournal()" style="width:150px">
             <button class="btn btn-excel" onclick="exportData('journal')">تصدير Excel</button>
             <button class="btn btn-import" onclick="document.getElementById('fileJou').click()">استيراد Excel</button>
             <input type="file" id="fileJou" hidden onchange="importData(this, 'journal')" accept=".xlsx, .xls">
@@ -715,6 +716,28 @@
             if(b.innerHTML === '') b.innerHTML = '<tr><td colspan="6">لا توجد معاملات مسجلة لهذا الاسم</td></tr>';
         };
     })();
+            window.filterJournal = function() {
+            const q = document.getElementById('jouSearch').value.toLowerCase();
+            const d = document.getElementById('jouDateFilter').value;
+            const rows = document.querySelectorAll('#journalBody tr');
+            
+            rows.forEach(row => {
+                if(row.cells.length < 5) return; // تخطي صفوف تفاصيل الأصناف
+                const text = row.innerText.toLowerCase();
+                const dateCell = row.cells[1].querySelector('input').value;
+                const matchText = text.includes(q);
+                const matchDate = !d || dateCell === d;
+                
+                if(matchText && matchDate) {
+                    row.style.display = '';
+                    if(row.nextElementSibling && row.nextElementSibling.style.display === 'table-row') {
+                        // إبقاء صف التفاصيل ظاهراً إذا كان مفتوحاً
+                    }
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        };
 </script>
 </body>
 </html>
