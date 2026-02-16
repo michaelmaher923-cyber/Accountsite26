@@ -95,7 +95,18 @@
     <div id="journalPage" class="page">
         <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
         <div class="search-container" style="background: #f1f5f9; padding: 15px; border-radius: 10px; flex-wrap: wrap;">
-            <input type="text" class="search-input" id="jouSearch" placeholder="بحث (اسم، حساب، ملاحظة...)" oninput="filterJournal()">
+            <div id="journalPage" class="page">
+    <button class="btn btn-add" onclick="openPage('homePage')">⬅ رجوع</button>
+    
+    <div class="search-container" style="background: #f1f5f9; padding: 15px; border-radius: 10px; flex-wrap: wrap;">
+        <input type="date" id="jouDateFilter" onchange="filterJournal()" style="width:150px">
+        <button class="btn btn-excel" onclick="exportData('journal')">تصدير Excel</button>
+        <button class="btn btn-import" onclick="document.getElementById('fileJou').click()">استيراد Excel</button>
+        <input type="file" id="fileJou" hidden onchange="importData(this, 'journal')" accept=".xlsx, .xls">
+    </div>
+    
+    ...
+</div>
             <input type="date" id="jouDateFilter" onchange="filterJournal()" style="width:150px">
             <button class="btn btn-excel" onclick="exportData('journal')">تصدير Excel</button>
             <button class="btn btn-import" onclick="document.getElementById('fileJou').click()">استيراد Excel</button>
