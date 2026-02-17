@@ -172,7 +172,8 @@
                 <thead>
                     <tr>
                         <th style="width:100px">التاريخ</th>
-                                                 <th>البيان (ملاحظات)</th>
+                        <th style="width:80px">رقم القيد</th>
+                        <th>البيان</th>
                         <th style="width:90px">مدين (+)</th>
                         <th style="width:90px">دائن (-)</th>
                         <th style="width:100px">الرصيد الجاري</th>
@@ -696,15 +697,16 @@
                 if(debAmt === 0 && creAmt === 0) return;
                 runningBalance += (debAmt - creAmt);
                 
-                // تم تعديل البيان هنا ليعرض الصنف فقط ويخفي الملاحظات (note)
-                let itemDetail = j.prod ? `<small style="color:#64748b;">(صنف: ${j.prod} | كمية: ${j.q} | سعر: ${j.unitPrice})</small>` : "-";
-                
+                // البيان يعرض الصنف والكمية والسعر والملاحظات بشكل منسق
+                let itemDetail = j.prod ? `صنف: ${j.prod} (ك:${j.q} * س:${j.unitPrice})` : "";
+                let fullDetail = j.note ? `${itemDetail} - ${j.note}` : itemDetail;
+
                 b.innerHTML += `<tr>
                     <td>${j.date || ''}</td>
                     <td>${j.ref || ''}</td>
-                    <td style="text-align:right;">${itemDetail}</td>
-                    <td style="color:blue">${debAmt > 0 ? debAmt : '-'}</td>
-                    <td style="color:red">${creAmt > 0 ? creAmt : '-'}</td>
+                    <td style="text-align:right;">${fullDetail || '-'}</td>
+                    <td style="color:blue">${debAmt > 0 ? debAmt.toLocaleString() : '-'}</td>
+                    <td style="color:red">${creAmt > 0 ? creAmt.toLocaleString() : '-'}</td>
                     <td style="font-weight:bold; background:#f8fafc;">${runningBalance.toLocaleString()}</td>
                 </tr>`;
             });
