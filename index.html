@@ -697,14 +697,13 @@
                 if(debAmt === 0 && creAmt === 0) return;
                 runningBalance += (debAmt - creAmt);
                 
-                // البيان يعرض الصنف والكمية والسعر والملاحظات بشكل منسق
-                let itemDetail = j.prod ? `صنف: ${j.prod} (ك:${j.q} * س:${j.unitPrice})` : "";
-                let fullDetail = j.note ? `${itemDetail} - ${j.note}` : itemDetail;
+                // البيان يعرض تفاصيل الصنف فقط ويتم تجاهل الملاحظات
+                let itemDetail = j.prod ? `صنف: ${j.prod} (ك:${j.q} * س:${j.unitPrice})` : "-";
 
                 b.innerHTML += `<tr>
                     <td>${j.date || ''}</td>
                     <td>${j.ref || ''}</td>
-                    <td style="text-align:right;">${fullDetail || '-'}</td>
+                    <td style="text-align:right;">${itemDetail}</td>
                     <td style="color:blue">${debAmt > 0 ? debAmt.toLocaleString() : '-'}</td>
                     <td style="color:red">${creAmt > 0 ? creAmt.toLocaleString() : '-'}</td>
                     <td style="font-weight:bold; background:#f8fafc;">${runningBalance.toLocaleString()}</td>
