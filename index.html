@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -288,15 +289,14 @@
 <datalist id="partnerList"></datalist>
 
 <script type="module">
-    // --- إعدادات الحماية والاتصال ---
     const _0xTarget = atob('bWljaGFlbG1haGVyOTIzLWN5YmVyLmdpdGh1Yi5pbw==');
     if (window.location.hostname !== _0xTarget) {
-        document.body.innerHTML = '<div style="direction:rtl;text-align:center;padding:50px;font-family:sans-serif;"><h2>⚠️ نسخة غير مرخصة</h2></div>';
+        document.body.innerHTML = '<div style="direction:rtl;text-align:center;padding:50px;font-family:sans-serif;"><h2>⚠️ نسخة غير مرخصة إلا على الرابط الأصلي              أ مايكل ماهر</h2></div>';
         window.stop();
     }
 
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const config = {
@@ -313,136 +313,472 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
 
-    // --- وظائف التوثيق ---
     window.switchAuth = (isLogin) => {
         document.getElementById('loginTab').classList.toggle('active', isLogin);
         document.getElementById('registerTab').classList.toggle('active', !isLogin);
         document.querySelector('.auth-box .btn-save').innerText = isLogin ? 'دخول' : 'إنشاء حساب جديد';
     };
 
-    window.processAuth = async () => {
+     window.processAuth = async () => {
         const u = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value.trim();
-        if(!u || !p) return alert("⚠️ أدخل البيانات");
+        const isLogin = document.getElementById('loginTab').classList.contains('active');
+        
+        if(!u || !p) return alert("⚠️ يرجى إدخال اسم المستخدم وكلمة المرور");
         
         document.getElementById('loader').style.display = 'flex';
-        const safeUser = btoa(unescape(encodeURIComponent(u))).replace(/[/+=]/g, "").toLowerCase().substring(0, 15);
-        const email = safeUser + "@maher-system.com";
-        
         try {
-            if (document.getElementById('loginTab').classList.contains('active')) {
-                await signInWithEmailAndPassword(auth, email, p);
-            } else {
-                await createUserWithEmailAndPassword(auth, email, p);
+            localStorage.setItem('user_display_name', u); 
+            const safeUser = btoa(unescape(encodeURIComponent(u))).replace(/[/+=]/g, "").toLowerCase().substring(0, 15);
+            const email = safeUser + "@maher-system.com";
+            
+            if (isLogin) { 
+                await signInWithEmailAndPassword(auth, email, p); 
+            } else { 
+                await createUserWithEmailAndPassword(auth, email, p); 
+                alert("✅ تم التسجيل بنجاح"); 
             }
-            localStorage.setItem('user_display_name', u);
         } catch (e) {
-            alert("خطأ في الدخول");
+            alert("حدث خطأ: تأكد من اسم المستخدم أو كلمة المرور");
             document.getElementById('loader').style.display = 'none';
         }
     };
 
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            window.currentUser = localStorage.getItem('user_display_name') || "مستخدم";
-            const snap = await get(ref(db, `users/${user.uid}/data`));
-            const d = snap.exists() ? snap.val() : {};
-            window.userDB = { accounts: d.accounts || [], journal: d.journal || [], products: d.products || [], partnersInfo: d.partnersInfo || [] };
+            const savedName = localStorage.getItem('user_display_name');
+            window.currentUser = savedName || user.email.split('@')[0];
+            const snapshot = await get(ref(db, `users/${user.uid}/data`));
+            const data = snapshot.exists() ? snapshot.val() : {};
+            window.userDB = { accounts: data.accounts || [], journal: data.journal || [], products: data.products || [], partnersInfo: data.partnersInfo || [] };
             startApp();
         }
     });
 
     window.syncToCloud = async () => {
         if(!auth.currentUser) return;
+        const { getDatabase, ref, update } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js");
+        const db = getDatabase();
         document.getElementById('loader').style.display = 'flex';
+        const updates = {};
+        updates[`users/${auth.currentUser.uid}/data/accounts`] = window.userDB.accounts;
+        updates[`users/${auth.currentUser.uid}/data/journal`] = window.userDB.journal;
+        updates[`users/${auth.currentUser.uid}/data/products`] = window.userDB.products;
+        updates[`users/${auth.currentUser.uid}/data/partnersInfo`] = window.userDB.partnersInfo;
         try {
-            await update(ref(db, `users/${auth.currentUser.uid}/data`), window.userDB);
-            alert("✅ تم الحفظ بنجاح");
-        } catch (e) { alert("❌ فشل الحفظ"); }
+            await update(ref(db), updates);
+            alert("✅ تم الحفظ بنجاح (تحديث ذكي)");
+        } catch (e) {
+            alert("❌ فشل الحفظ");
+        }
         document.getElementById('loader').style.display = 'none';
     };
 
-    window.logout = () => signOut(auth).then(() => location.reload());
+    window.logout = () => { signOut(auth).then(() => location.reload()); };
+</script>
 
-    // --- منطق التشغيل السريع (Core Engine) ---
-    const types = ["أصول", "التزامات", "حقوق ملكية", "مبيعات", "تكلفة مبيعات", "مصروفات", "إيرادات", "مخزون", "مدينون", "دائنون", "غير ذلك"];
+<script>
+    (function(){
+        const _0xK3 = ["أصول", "التزامات", "حقوق ملكية", "مبيعات", "تكلفة مبيعات", "مصروفات", "إيرادات", "مخزون", "مدينون", "دائنون", "غير ذلك"];
 
-    window.startApp = () => {
-        document.getElementById('authScreen').style.display = 'none';
-        document.getElementById('appScreen').style.display = 'block';
-        document.getElementById('loader').style.display = 'none';
-        document.getElementById('userDisplay').innerText = "👤 " + currentUser;
-        updateDatalists(); openPage('homePage');
-    };
+        window.startApp = function() {
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('appScreen').style.display = 'block';
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('userDisplay').innerText = "👤 " + currentUser;
+            updateDatalists(); openPage('homePage');
+        };
 
-    window.openPage = (id) => {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        render(id);
-    };
+        window.openPage = function(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            render(id);
+        };
 
-    window.updateDatalists = () => {
-        document.getElementById('accList').innerHTML = userDB.accounts.map(a => `<option value="${a.name}">`).join('');
-        document.getElementById('partnerList').innerHTML = userDB.partnersInfo.map(p => `<option value="${p.name}">`).join('');
-    };
+        // دالة البحث الذكي مع التظليل
+        let searchDebounce;
+        window.tableSearch = function(bodyId, query) {
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(() => {
+                const rows = document.getElementById(bodyId).rows;
+                const q = query.toLowerCase();
+                for (let i = 0; i < rows.length; i++) {
+                    let rowText = rows[i].innerText.toLowerCase();
+                    rows[i].style.display = rowText.includes(q) ? "" : "none";
+                }
+            }, 300);
+        };
 
-    window.render = (id) => {
-        const b = document.getElementById(id.replace('Page', 'Body'));
-        if(!b) return;
-
-        if(id === 'journalPage') {
-            if(!window.displayLimit) window.displayLimit = 50;
-            const frag = document.createDocumentFragment();
-            const data = userDB.journal;
-            const pOpts = `<option value="">-- صنف --</option>` + userDB.products.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+        // تصدير البيانات إلى Excel مباشرة من JSON
+        window.exportData = function(key) {
+            let data = [];
+            if(key === 'accounts') data = userDB.accounts;
+            else if(key === 'journal') data = userDB.journal;
+            else if(key === 'products') data = userDB.products;
+            else if(key === 'partners') data = userDB.partnersInfo;
             
-            for(let k = 0; k < window.displayLimit && k < data.length; k++) {
-                let i = data.length - 1 - k;
-                let j = data[i];
-                const tr = document.createElement('tr');
-                if(j.isBlue) tr.className = 'row-blue';
-                tr.innerHTML = `
-                    <td><input type="text" value="${j.ref||''}" onchange="userDB.journal[${i}].ref=this.value"></td>
-                    <td><input type="date" value="${j.date||''}" onchange="userDB.journal[${i}].date=this.value"></td>
-                    <td><input list="accList" value="${j.deb||''}" onchange="userDB.journal[${i}].deb=this.value"></td>
-                    <td><input list="accList" value="${j.cre||''}" onchange="userDB.journal[${i}].cre=this.value"></td>
-                    <td><input list="partnerList" value="${j.name||''}" onchange="userDB.journal[${i}].name=this.value"></td>
-                    <td><input type="number" id="v${i}" value="${j.v||0}" onchange="userDB.journal[${i}].v=this.value"></td>
-                    <td><input type="text" value="${j.note||''}" onchange="userDB.journal[${i}].note=this.value"></td>
-                    <td><button onclick="userDB.journal[${i}].showExtra=!userDB.journal[${i}].showExtra;render('journalPage')">📦</button>
-                    <button class="btn-del" onclick="userDB.journal.splice(${i},1);render('journalPage')">🗑️</button></td>`;
-                frag.appendChild(tr);
-                if(j.showExtra) {
-                    const ex = document.createElement('tr');
-                    ex.innerHTML = `<td colspan="8">صنف: <select onchange="window.updateRowPrice(${i},this.value)">${pOpts.replace(`value="${j.prod}"`,`value="${j.prod}" selected`)}</select> 
-                    سعر: <input type="number" id="p${i}" value="${j.unitPrice||0}" onchange="window.calcRowVal(${i})"> 
-                    كمية: <input type="number" id="q${i}" value="${j.q||0}" onchange="window.calcRowVal(${i})"></td>`;
-                    frag.appendChild(ex);
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Data");
+            XLSX.writeFile(wb, `${key}.xlsx`);
+        };
+
+        // استيراد البيانات من Excel
+        window.importData = function(input, key) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet);
+                
+                if(key === 'accounts') userDB.accounts = json;
+                else if(key === 'journal') userDB.journal = json;
+                else if(key === 'products') userDB.products = json;
+                else if(key === 'partners') userDB.partnersInfo = json;
+                
+                render(key + 'Page');
+                updateDatalists();
+                alert("تم الاستيراد بنجاح");
+            };
+            reader.readAsArrayBuffer(file);
+        };
+
+        // تصدير جدول HTML (للتقارير)
+        window.exportTableToExcel = function(id, name) {
+            const table = document.getElementById(id);
+            const wb = XLSX.utils.table_to_book(table);
+            XLSX.writeFile(wb, `${name}.xlsx`);
+        };
+
+        window.exportBalanceSheet = function() {
+            const a = document.getElementById('assetsBody');
+            const l = document.getElementById('liabilitiesBody');
+            const wb = XLSX.utils.book_new();
+            const ws1 = XLSX.utils.table_to_sheet(a);
+            const ws2 = XLSX.utils.table_to_sheet(l);
+            XLSX.utils.book_append_sheet(wb, ws1, "Assets");
+            XLSX.utils.book_append_sheet(wb, ws2, "Liabilities");
+            XLSX.writeFile(wb, "المركز_المالي.xlsx");
+        };
+
+        window.updateDatalists = function() {
+            const dl = document.getElementById('accList'); dl.innerHTML = '';
+            userDB.accounts.forEach(a => { if(a.name) dl.innerHTML += `<option value="${a.name}">`; });
+            const pl = document.getElementById('partnerList'); pl.innerHTML = '';
+            userDB.partnersInfo.forEach(p => { if(p.name) pl.innerHTML += `<option value="${p.name}">`; });
+        };
+
+        window.getTrialBalances = function(fromDate = null, toDate = null) {
+            let accs = {};
+            userDB.accounts.forEach(a => { if(a.name) accs[a.name] = { d: 0, c: 0, type: a.type }; });
+            userDB.journal.forEach(j => {
+                if (fromDate && j.date < fromDate) return;
+                if (toDate && j.date > toDate) return;
+                if(accs[j.deb]) accs[j.deb].d += parseFloat(j.v) || 0;
+                if(accs[j.cre]) accs[j.cre].c += parseFloat(j.v) || 0;
+            });
+            let res = [];
+            for(let n in accs) {
+                let bal = accs[n].d - accs[n].c;
+                res.push({ name: n, type: accs[n].type, balance: bal, d: accs[n].d, c: accs[n].c });
+            }
+            return res;
+        };
+
+        window.calculateNetProfit = function(fromDate = null, toDate = null) {
+            let b = getTrialBalances(fromDate, toDate);
+            let s = (t) => b.filter(a => a.type === t).reduce((x, a) => x + Math.abs(a.balance), 0);
+            return (s('مبيعات') - s('تكلفة مبيعات')) + s('إيرادات') - s('مصروفات');
+        };
+
+        window.insertRow = function(target, index) {
+            if(target === 'acc') userDB.accounts.splice(index + 1, 0, {name:'', type:'أصول'});
+            if(target === 'jou') userDB.journal.splice(index + 1, 0, {ref:'', date: new Date().toISOString().split('T')[0], q:0, v:0, deb:'', cre:'', name:'', prod:'', note:'', isBlue: false, showExtra: false});
+            if(target === 'prod') userDB.products.splice(index + 1, 0, {name:'', price:0});
+            if(target === 'part') userDB.partnersInfo.splice(index + 1, 0, {name:'', phone:'', note:''});
+            render(document.querySelector('.page.active').id);
+        };
+
+        window.render = function(id) {
+            if(id === 'accountsPage') {
+                const b = document.getElementById('accountsBody'); b.innerHTML = '';
+                userDB.accounts.forEach((a, i) => {
+                    let o = _0xK3.map(t => `<option ${a.type==t?'selected':''}>${t}</option>`).join('');
+                    b.innerHTML += `<tr><td><input value="${a.name||''}" onchange="userDB.accounts[${i}].name=this.value;updateDatalists()"></td><td><select onchange="userDB.accounts[${i}].type=this.value">${o}</select></td><td><button class="btn btn-ins" onclick="insertRow('acc', ${i})">➕</button><button class="btn btn-del" onclick="userDB.accounts.splice(${i},1);render('accountsPage')">🗑️</button></td></tr>`;
+                });
+            }
+            if(id === 'journalPage') {
+                if(!window.displayLimit) window.displayLimit = 50;
+                const b = document.getElementById('journalBody');
+                let rowsHtml = ''; let colorCounter = 0;
+                const pOptionsRaw = `<option value="">-- صنف --</option>` + userDB.products.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+                const totalRecords = userDB.journal.length;
+                const startIndex = Math.max(0, totalRecords - window.displayLimit);
+                const visibleData = userDB.journal.slice(startIndex).reverse();
+
+                visibleData.forEach((j, displayIdx) => {
+                    let i = (totalRecords - 1) - displayIdx;
+                    let rowClass = j.isBlue ? ((++colorCounter % 2 !== 0) ? 'row-blue' : 'row-green') : '';
+                    let extraStyle = j.showExtra ? 'table-row' : 'none';
+                    let btnColor = j.isBlue ? (rowClass === 'row-blue' ? 'var(--blue-row)' : 'var(--green-row)') : ''; 
+                    let pO = pOptionsRaw.replace(`value="${j.prod}"`, `value="${j.prod}" selected`);
+
+                    rowsHtml += `<tr class="${rowClass}">
+                        <td><input type="text" value="${j.ref||''}" onchange="userDB.journal[${i}].ref=this.value"></td>
+                        <td><input type="date" value="${j.date||''}" onchange="userDB.journal[${i}].date=this.value"></td>
+                        <td><input list="accList" value="${j.deb||''}" onchange="userDB.journal[${i}].deb=this.value"></td>
+                        <td><input list="accList" value="${j.cre||''}" onchange="checkSalesReminder(${i}, this.value)"></td>
+                        <td><input list="partnerList" value="${j.name||''}" onchange="userDB.journal[${i}].name=this.value"></td>
+                        <td><input type="number" id="v${i}" value="${j.v||0}" onchange="userDB.journal[${i}].v=this.value"></td>
+                        <td><input type="text" value="${j.note||''}" onchange="userDB.journal[${i}].note=this.value"></td>
+                        <td style="white-space:nowrap">
+                            <button onclick="userDB.journal[${i}].showExtra=!userDB.journal[${i}].showExtra;render('journalPage')" style="background:${j.showExtra?'#cbd5e1':''}">📦</button>
+                            <button onclick="userDB.journal[${i}].isBlue=!userDB.journal[${i}].isBlue;render('journalPage')" style="background:${btnColor}">🎨</button>
+                            <button class="btn btn-ins" onclick="insertRow('jou', ${i})">➕</button>
+                            <button class="btn btn-del" onclick="userDB.journal.splice(${i},1);render('journalPage')">🗑️</button>
+                        </td>
+                    </tr>
+                    <tr class="${rowClass}" style="display:${extraStyle};">
+                        <td colspan="3">الصنف: <select style="width:65%" onchange="updateRowPrice(${i}, this.value)">${pO}</select></td>
+                        <td colspan="2">سعر: <input type="number" id="p${i}" value="${j.unitPrice || 0}" onchange="calcRowVal(${i})"></td>
+                        <td colspan="3">كمية: <input type="number" id="q${i}" value="${j.q||0}" onchange="validateStock(${i})"></td>
+                    </tr>`;
+                });
+                b.innerHTML = rowsHtml;
+                if (totalRecords > window.displayLimit) {
+                    b.innerHTML += `<tr><td colspan="8"><button class="btn btn-add" style="width:100%" onclick="window.displayLimit += 100; render('journalPage')">عرض 100 قيد إضافي</button></td></tr>`;
                 }
             }
-            b.innerHTML = ""; b.appendChild(frag);
-        } else if(id === 'accountsPage') {
-            b.innerHTML = userDB.accounts.map((a, i) => `<tr><td><input value="${a.name||''}" onchange="userDB.accounts[${i}].name=this.value"></td>
-            <td><select onchange="userDB.accounts[${i}].type=this.value">${types.map(t=>`<option ${a.type==t?'selected':''}>${t}</option>`).join('')}</select></td>
-            <td><button class="btn-del" onclick="userDB.accounts.splice(${i},1);render('accountsPage')">🗑️</button></td></tr>`).join('');
+            if(id === 'partnersPage') {
+                const b = document.getElementById('partnersBody'); b.innerHTML = '';
+                let pC = {};
+                userDB.journal.forEach(j => {
+                    if(j.name) {
+                        let n = j.name.trim(); if(!pC[n]) pC[n] = { d: 0, c: 0 };
+                        let v = parseFloat(j.v) || 0;
+                        let debAcc = userDB.accounts.find(a => a.name === j.deb);
+                        let creAcc = userDB.accounts.find(a => a.name === j.cre);
+                        if(debAcc && ["مدينون", "دائنون"].includes(debAcc.type)) pC[n].d += v;
+                        if(creAcc && ["مدينون", "دائنون"].includes(creAcc.type)) pC[n].c += v;
+                    }
+                });
+                let debtors = [], creditors = [];
+                userDB.partnersInfo.forEach((p, i) => {
+                    let d = pC[p.name] ? pC[p.name].d : 0, c = pC[p.name] ? pC[p.name].c : 0, net = d - c;
+                    let row = `<tr><td><input value="${p.name||''}" onchange="userDB.partnersInfo[${i}].name=this.value;updateDatalists()"></td><td><input value="${p.phone||''}" onchange="userDB.partnersInfo[${i}].phone=this.value"></td><td><input value="${p.note||''}" onchange="userDB.partnersInfo[${i}].note=this.value"></td><td style="color:blue">${d}</td><td style="color:orange">${c}</td><td style="font-weight:bold; color:${net>=0?'green':'red'}">${net.toLocaleString()}</td><td style="white-space:nowrap"><button title="كشف حساب" onclick="viewStatement('${p.name}')" style="cursor:pointer; background:#e2e8f0; border:1px solid #94a3b8; border-radius:4px; padding:4px 8px;">🖨️</button> <button class="btn btn-del" onclick="userDB.partnersInfo.splice(${i},1);render('partnersPage')">🗑️</button></td></tr>`;
+                    if(net >= 0) debtors.push(row); else creditors.push(row);
+                });
+                b.innerHTML = `<tr style="background:#d1e9ff; font-weight:bold;"><td colspan="7">🔵 عملاء (أرصدة مدينة - لنا عندهم)</td></tr>` + debtors.join('') + 
+                              `<tr style="background:#ffd1d1; font-weight:bold;"><td colspan="7">🔴 موردين (أرصدة دائنة - علينا لهم)</td></tr>` + creditors.join('');
+            }
+            if(id === 'salesReportPage' || id === 'purchasesReportPage') {
+                const isSalesPage = (id === 'salesReportPage');
+                const b = document.getElementById(isSalesPage ? 'salesReportBody' : 'purchasesReportBody'); 
+                b.innerHTML = '<tr><td colspan="6">⏳ جاري التحميل...</td></tr>';
+                setTimeout(() => {
+                    let tQ = 0, tV = 0, uP = new Set();
+                    const fD = userDB.journal.filter(j => {
+                        let cA = userDB.accounts.find(a => a.name === j.cre);
+                        let dA = userDB.accounts.find(a => a.name === j.deb);
+                        return isSalesPage ? (cA && cA.type === "مبيعات") : (dA && dA.type === "مخزون" && (!cA || cA.type !== "مخزون"));
+                    });
+                    fD.forEach(j => {
+                        tQ += parseFloat(j.q || 0); tV += parseFloat(j.v || 0);
+                        if(j.name) uP.add(j.name);
+                    });
+                    let avg = fD.length > 0 ? (tV / fD.length).toFixed(2) : 0;
+                    let h = `<tr style="background:#f1f5f9; font-weight:bold;"><td colspan="2">📊 ملخص:</td><td>ك: ${tQ}</td><td>متوسط: ${parseFloat(avg).toLocaleString()}</td><td style="color:var(--accent)">ج: ${tV.toLocaleString()}</td><td>عدد: ${uP.size}</td></tr>`;
+                    fD.slice(-100).reverse().forEach(j => {
+                        h += `<tr><td>${j.date||''}</td><td>${j.prod||'-'}</td><td>${j.q||0}</td><td>${parseFloat(j.unitPrice||0).toLocaleString()}</td><td style="font-weight:bold">${parseFloat(j.v||0).toLocaleString()}</td><td>${j.name||'-'}</td></tr>`;
+                    });
+                    b.innerHTML = h;
+                }, 10);
+            }
+            if(id === 'trialPage') {
+                const b = document.getElementById('trialBody'); b.innerHTML = '';
+                getTrialBalances().forEach(a => { b.innerHTML += `<tr><td class="trial-blue">${a.name}</td><td>${a.d}</td><td>${a.c}</td><td class="trial-blue">${a.balance>0?a.balance:0}</td><td class="trial-blue">${a.balance<0?Math.abs(a.balance):0}</td></tr>`; });
+            }
+            if(id === 'incomePage') {
+                const b = document.getElementById('incomeBody'); 
+                b.innerHTML = '<tr><td colspan="2" style="text-align:center;">⏳ جاري المعالجة...</td></tr>';
+                const pageContainer = document.getElementById('incomePage');
+                if(!document.getElementById('advancedFilterContainer')) {
+                    const filterHtml = `<div id="advancedFilterContainer" class="search-container" style="background:#f1f5f9; padding:15px; border-radius:12px; margin-bottom:20px; display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:10px; border:1px solid var(--accent); border-right: 5px solid var(--accent);"><label><b>📅 من:</b> <input type="date" id="incomeFrom" onchange="render('incomePage')"></label><label><b>📅 إلى:</b> <input type="date" id="incomeTo" onchange="render('incomePage')"></label><label><b>👤 العميل:</b> <select id="filterPartner" onchange="render('incomePage')" style="width:100%"><option value="">الكل</option></select></label><label><b>📦 المنتج:</b> <select id="filterProduct" onchange="render('incomePage')" style="width:100%"><option value="">الكل</option></select></label><div style="display:flex; align-items:flex-end;"><button class="btn btn-excel" style="width:100%" onclick="exportTableToExcel('incomeBody', 'تحليل_الأرباح_المفصل')">تصدير التحليل</button></div></div>`;
+                    pageContainer.insertBefore(document.createRange().createContextualFragment(filterHtml), pageContainer.children[1]);
+                    userDB.partnersInfo.forEach(p => document.getElementById('filterPartner').innerHTML += `<option value="${p.name}">${p.name}</option>`);
+                    userDB.products.forEach(p => document.getElementById('filterProduct').innerHTML += `<option value="${p.name}">${p.name}</option>`);
+                }
+                setTimeout(() => {
+                    let fDate = document.getElementById('incomeFrom').value, tDate = document.getElementById('incomeTo').value, fPart = document.getElementById('filterPartner').value, fProd = document.getElementById('filterProduct').value;
+                    let filteredJournal = userDB.journal.filter(j => (!fDate || j.date >= fDate) && (!tDate || j.date <= tDate) && (!fPart || (j.name && j.name.trim() === fPart.trim())) && (!fProd || (j.prod && j.prod.trim() === fProd.trim())));
+                    let sales = 0, costs = 0, otherInc = 0, expenses = 0, analysisMap = {}; 
+                    filteredJournal.forEach(j => {
+                        let v = parseFloat(j.v) || 0;
+                        let debAcc = userDB.accounts.find(a => a.name === j.deb), creAcc = userDB.accounts.find(a => a.name === j.cre);
+                        if (creAcc && creAcc.type === "مبيعات") { sales += v; if(j.prod) { let key = `${j.name || 'نقدي'} ⬅️ ${j.prod}`; analysisMap[key] = (analysisMap[key] || 0) + v; } }
+                        if (debAcc && debAcc.type === "تكلفة مبيعات") { costs += v; if(j.prod) { let key = `${j.name || 'نقدي'} ⬅️ ${j.prod}`; analysisMap[key] = (analysisMap[key] || 0) - v; } }
+                        if (creAcc && creAcc.type === "إيرادات") otherInc += v;
+                        if (debAcc && debAcc.type === "مصروفات") expenses += v;
+                    });
+                    let gp = sales - costs, net = gp + otherInc - expenses;
+                    let pMargin = sales > 0 ? ((gp / sales) * 100).toFixed(2) : 0, nMargin = sales > 0 ? ((net / sales) * 100).toFixed(2) : 0;
+                    let h = `<tr style="background:var(--main); color:white;"><th colspan="2">📊 نتائج التحليل المالي والربحية</th></tr>
+                        <tr><td>إجمالي قيمة المبيعات</td><td>${sales.toLocaleString()}</td></tr>
+                        <tr><td>(-) إجمالي تكلفة البضاعة</td><td>${costs.toLocaleString()}</td></tr>
+                        <tr class="total-row" style="background:#f8fafc;"><td>مجمل الربح التجاري (GP)</td><td>${gp.toLocaleString()}</td></tr>
+                        <tr style="background:#f0f9ff;"><td>📈 هامش مجمل الربح (%)</td><td style="font-weight:bold; color:var(--accent);">${pMargin}%</td></tr>
+                        <tr><td style="color:var(--success);">(+) إجمالي إيرادات أخرى</td><td>${otherInc.toLocaleString()}</td></tr>
+                        <tr><td style="color:var(--danger);">(-) إجمالي مصروفات إدارية وعمومية</td><td>${expenses.toLocaleString()}</td></tr>
+                        <tr class="total-row" style="background:${net>=0?'#dcfce7':'#fee2e2'}; border-top: 2px solid var(--main);"><td>النتيجة النهائية (صافي الربح/الخسارة)</td><td>${net.toLocaleString()}</td></tr>
+                        <tr style="background:#f0fdf4;"><td>🎯 صافي هامش الربح النهائي (%)</td><td style="font-weight:bold; color:var(--success);">${nMargin}%</td></tr>
+                        <tr><td colspan="2" style="height:30px;"></td></tr>
+                        <tr style="background:var(--accent); color:white;"><th colspan="2">🔍 تحليل الربحية التفصيلي</th></tr>
+                        <tr style="background:#f8fafc; font-weight:bold;"><td>البيان (العميل ⬅️ المنتج)</td><td>صافي ربح المعاملة</td></tr>`;
+                    Object.keys(analysisMap).sort().forEach(key => {
+                        let prof = analysisMap[key];
+                        h += `<tr><td style="text-align:right;">${key}</td><td style="font-weight:bold; color:${prof>=0?'#059669':'#be123c'}">${prof.toLocaleString()}</td></tr>`;
+                    });
+                    b.innerHTML = h;
+                }, 10);
+            }
+            if(id === 'balanceSheetPage') {
+                let bl = getTrialBalances(), ab = document.getElementById('assetsBody'), lb = document.getElementById('liabilitiesBody');
+                ab.innerHTML = ''; lb.innerHTML = ''; let tA = 0, tL = 0;
+                bl.forEach(a => {
+                    if((['أصول', 'مخزون', 'مدينون'].includes(a.type)) && a.balance > 0) { let v = a.balance; tA += v; ab.innerHTML += `<tr><td>${a.name}</td><td>${v}</td></tr>`; }
+                    if((['التزامات', 'حقوق ملكية', 'دائنون'].includes(a.type)) && a.balance < 0) { let v = Math.abs(a.balance); tL += v; lb.innerHTML += `<tr><td>${a.name}</td><td>${v}</td></tr>`; }
+                });
+                let nt = calculateNetProfit(); tL += nt;
+                let resText = nt >= 0 ? "صافي الربح" : "صافي الخسارة";
+                let textColor = nt >= 0 ? "var(--success)" : "var(--danger)";
+                lb.innerHTML += `<tr style="background:#f0fdf4; font-weight:bold; color:${textColor}"><td>${resText}</td><td>${nt}</td></tr><tr class="total-row"><td>الإجمالي</td><td>${tA}</td></tr>`;
+                ab.innerHTML += `<tr class="total-row"><td>الإجمالي</td><td>${tA}</td></tr>`;
+                const finalRow = lb.querySelector('tr:last-child td:last-child');
+                if(finalRow) finalRow.innerText = tL;
+            }
+            if(id === 'productsPage') {
+                const b = document.getElementById('productsBody'); b.innerHTML = '';
+                userDB.products.forEach((p, i) => {
+                    let win = 0, out = 0;
+                    userDB.journal.forEach(j => {
+                        if(j.prod === p.name){
+                            let debAcc = userDB.accounts.find(a => a.name === j.deb);
+                            let creAcc = userDB.accounts.find(a => a.name === j.cre);
+                            if(debAcc && debAcc.type === "مخزون") win += parseFloat(j.q) || 0;
+                            if(creAcc && creAcc.type === "مخزون") out += parseFloat(j.q) || 0;
+                        }
+                    });
+                    b.innerHTML += `<tr><td><input value="${p.name||''}" onchange="userDB.products[${i}].name=this.value"></td><td><input type="number" value="${p.price||0}" onchange="userDB.products[${i}].price=this.value"></td><td>${win}</td><td>${out}</td><td style="font-weight:bold">${win - out}</td><td><button class="btn btn-ins" onclick="insertRow('prod', ${i})">➕</button><button class="btn btn-del" onclick="userDB.products.splice(${i},1);render('productsPage')">🗑️</button></td></tr>`;
+                });
+            }
+        };
+
+        window.checkSalesReminder = function(i, val) {
+            userDB.journal[i].cre = val;
+            let creAcc = userDB.accounts.find(a => a.name === val);
+            if(creAcc && creAcc.type === "مبيعات") alert("🔔 تنبيه: يجب عمل قيد إثبات تكلفة البضاعة المباعة.");
+        };
+
+        window.validateStock = function(i) {
+            let j = userDB.journal[i];
+            let creAcc = userDB.accounts.find(a => a.name === j.cre);
+            if(creAcc && creAcc.type === "مخزون" && j.prod) {
+                let cur = 0;
+                userDB.journal.forEach((jj, idx) => {
+                    if(idx !== i && jj.prod === j.prod) {
+                        let dAcc = userDB.accounts.find(a => a.name === jj.deb);
+                        let cAcc = userDB.accounts.find(a => a.name === jj.cre);
+                        if(dAcc && dAcc.type === "مخزون") cur += parseFloat(jj.q)||0;
+                        if(cAcc && cAcc.type === "مخزون") cur -= parseFloat(jj.q)||0;
+                    }
+                });
+                if(parseFloat(document.getElementById('q'+i).value) > cur) { alert("المتاح: " + cur); document.getElementById('q'+i).value = 0; }
+            }
+            calcRowVal(i);
+        };
+
+        window.updateRowPrice = function(i, n) {
+            const p = userDB.products.find(x => x.name === n);
+            userDB.journal[i].prod = n;
+            if(p) { 
+                document.getElementById('p'+i).value = p.price || 0;
+                userDB.journal[i].unitPrice = p.price || 0;
+                calcRowVal(i); 
+            }
+        };
+
+        window.calcRowVal = function(i) {
+            userDB.journal[i].q = document.getElementById('q'+i).value || 0;
+            userDB.journal[i].unitPrice = document.getElementById('p'+i).value || 0;
+            let total = (parseFloat(userDB.journal[i].unitPrice) || 0) * (parseFloat(userDB.journal[i].q) || 0);
+            document.getElementById('v'+i).value = total;
+            userDB.journal[i].v = total;
+        };
+
+        window.addAcc = () => { userDB.accounts.push({name:'', type:'أصول'}); render('accountsPage'); };
+        window.addJ = () => { userDB.journal.push({ref:'', date: new Date().toISOString().split('T')[0], q:0, v:0, deb:'', cre:'', name:'', prod:'', note:'', isBlue: false, showExtra: false}); render('journalPage'); };
+        window.addP = () => { userDB.products.push({name:'', price:0}); render('productsPage'); };
+        window.addPartnerInfo = () => { userDB.partnersInfo.push({name:'', phone:'', note:''}); render('partnersPage'); };
+        window.viewStatement = function(partnerName) {
+            if(!partnerName) return alert("يرجى إدخال اسم المتعامل أولاً");
+            openPage('statementPage');
+            document.getElementById('stName').innerText = "كشف حساب: " + partnerName;
+            const b = document.getElementById('statementBody'); b.innerHTML = '';
+            let runningBalance = 0;
+            let filteredJournal = userDB.journal.filter(j => j.name && j.name.trim() === partnerName.trim())
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+            filteredJournal.forEach(j => {
+                let v = parseFloat(j.v) || 0;
+                let debAmt = 0, creAmt = 0;
+                let debAcc = userDB.accounts.find(a => a.name === j.deb);
+                let creAcc = userDB.accounts.find(a => a.name === j.cre);
+                if(debAcc && ["مدينون", "دائنون"].includes(debAcc.type)) debAmt = v;
+                if(creAcc && ["مدينون", "دائنون"].includes(creAcc.type)) creAmt = v;
+                if(debAmt === 0 && creAmt === 0) return;
+                runningBalance += (debAmt - creAmt);
+                
+                // تم تعديل البيان هنا ليعرض الصنف فقط ويخفي الملاحظات (note)
+                let itemDetail = j.prod ? `<small style="color:#64748b;">(صنف: ${j.prod} | كمية: ${j.q} | سعر: ${j.unitPrice})</small>` : "-";
+                
+                b.innerHTML += `<tr>
+                    <td>${j.date || ''}</td>
+                    <td>${j.ref || ''}</td>
+                    <td style="text-align:right;">${itemDetail}</td>
+                    <td style="color:blue">${debAmt > 0 ? debAmt : '-'}</td>
+                    <td style="color:red">${creAmt > 0 ? creAmt : '-'}</td>
+                    <td style="font-weight:bold; background:#f8fafc;">${runningBalance.toLocaleString()}</td>
+                </tr>`;
+            });
+            if(b.innerHTML === '') b.innerHTML = '<tr><td colspan="6">لا توجد معاملات مسجلة لهذا الاسم</td></tr>';
+        };
+    })();
+window.filterJournalByColumn = function(colIdx, value) {
+    const table = document.getElementById("journalBody");
+    const rows = Array.from(table.children);
+    const q = value.toLowerCase();
+
+    rows.forEach((row, index) => {
+        // نفلتر الصفوف الأساسية فقط (التي تحتوي على 8 أعمدة)
+        if (row.cells.length === 8) {
+            const cell = row.cells[colIdx];
+            const input = cell.querySelector('input');
+            const cellText = input ? input.value.toLowerCase() : cell.textContent.toLowerCase();
+
+            if (cellText.includes(q)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+                // إخفاء صف التفاصيل المرتبط به لو كان مخفي
+                if (rows[index + 1] && rows[index + 1].cells.length < 8) {
+                    rows[index + 1].style.display = "none";
+                }
+            }
         }
-    };
-
-    window.calcRowVal = (i) => {
-        const q = parseFloat(document.getElementById('q'+i).value) || 0;
-        const p = parseFloat(document.getElementById('p'+i).value) || 0;
-        userDB.journal[i].q = q; userDB.journal[i].unitPrice = p; userDB.journal[i].v = q * p;
-        document.getElementById('v'+i).value = q * p;
-    };
-
-    window.updateRowPrice = (i, n) => {
-        const p = userDB.products.find(x => x.name === n);
-        if(p) { document.getElementById('p'+i).value = p.price; window.calcRowVal(i); }
-    };
-
-    window.addJ = () => { userDB.journal.push({date: new Date().toISOString().split('T')[0], v:0, isBlue:false}); render('journalPage'); };
-    window.addAcc = () => { userDB.accounts.push({name:'', type:'أصول'}); render('accountsPage'); };
-
+    });
+};
 </script>
 </body>
 </html>
