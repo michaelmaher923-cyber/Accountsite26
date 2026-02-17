@@ -52,7 +52,9 @@
     </div>
     <input type="text" id="username" placeholder="اسم المستخدم" style="margin-bottom:15px; width:100%;">
     <input type="password" id="password" placeholder="كلمة المرور" style="margin-bottom:15px; width:100%;">
-     <p style="font-size: 11px; color: var(--danger); margin-bottom: 10px;">* كلمة المرور يجب أن لا تقل عن 6 أحرف أو أرقام</p>
+<input type="text" id="activationCode" placeholder="أدخل كود التفعيل الأسبوعي" style="margin-bottom:5px; width:100%; border: 2px solid var(--accent);">
+<a href="https://short-jambo.ink/WeeklyAccountanysite26" target="_blank" style="display: block; font-size: 13px; color: var(--accent); margin-bottom: 15px; text-decoration: none; font-weight: bold;">اضغط هنا للحصول على كود تفعيل الأسبوع (مجاناً)</a>
+    <p style="font-size: 11px; color: var(--danger); margin-bottom: 10px;">* كلمة المرور يجب أن لا تقل عن 6 أحرف أو أرقام</p>
     <button class="btn btn-save" style="width:100%" onclick="processAuth()">دخول</button>
 </div>
 <div id="appScreen" style="display:none;">
@@ -184,8 +186,7 @@
                 <thead>
                     <tr>
                         <th style="width:100px">التاريخ</th>
-                        <th style="width:80px">رقم القيد</th>
-                        <th>البيان (ملاحظات)</th>
+                                                 <th>البيان (ملاحظات)</th>
                         <th style="width:90px">مدين (+)</th>
                         <th style="width:90px">دائن (-)</th>
                         <th style="width:100px">الرصيد الجاري</th>
@@ -299,27 +300,31 @@
         document.querySelector('.auth-box .btn-save').innerText = isLogin ? 'دخول' : 'إنشاء حساب جديد';
     };
 
-     window.processAuth = async () => {
+    window.processAuth = async () => {
         const u = document.getElementById('username').value.trim();
         const p = document.getElementById('password').value.trim();
+        const inputCode = document.getElementById('activationCode').value.trim();
         const isLogin = document.getElementById('loginTab').classList.contains('active');
-        
-        if(!u || !p) return alert("⚠️ يرجى إدخال اسم المستخدم وكلمة المرور");
-        
+        if(!u || !p || !inputCode) return alert("⚠️ يرجى إدخال اسم المستخدم وكلمة المرور وكود التحقق");
         document.getElementById('loader').style.display = 'flex';
         try {
+            const configSnapshot = await get(ref(db, `systemConfig/weeklyCode`));
+            const correctCode = configSnapshot.exists() ? configSnapshot.val().toString() : "";
+            if (inputCode !== correctCode) {
+                document.getElementById('loader').style.display = 'none';
+                {
+    document.getElementById('loader').style.display = 'none';
+    alert("❌ كود التفعيل خطأ! اضغط على رابط 'الحصول على الكود' أسفل الخانة للحصول على كود الأسبوع الجديد.");
+    return;
+}
+            }
             localStorage.setItem('user_display_name', u); 
             const safeUser = btoa(unescape(encodeURIComponent(u))).replace(/[/+=]/g, "").toLowerCase().substring(0, 15);
             const email = safeUser + "@maher-system.com";
-            
-            if (isLogin) { 
-                await signInWithEmailAndPassword(auth, email, p); 
-            } else { 
-                await createUserWithEmailAndPassword(auth, email, p); 
-                alert("✅ تم التسجيل بنجاح"); 
-            }
+            if (isLogin) { await signInWithEmailAndPassword(auth, email, p); } 
+            else { await createUserWithEmailAndPassword(auth, email, p); alert("✅ تم التسجيل بنجاح"); }
         } catch (e) {
-            alert("حدث خطأ: تأكد من اسم المستخدم أو كلمة المرور");
+            alert("حدث خطأ في البيانات");
             document.getElementById('loader').style.display = 'none';
         }
     };
@@ -711,8 +716,7 @@
                 let itemDetail = j.prod ? ` <br><small style="color:#64748b;">(صنف: ${j.prod} | كمية: ${j.q} | سعر: ${j.unitPrice})</small>` : "";
                 b.innerHTML += `<tr>
                     <td>${j.date || ''}</td>
-                    <td>${j.ref || ''}</td>
-                    <td style="text-align:right;">${(j.note || '') + itemDetail}</td>
+                                         <td style="text-align:right;">${(j.note || '') + itemDetail}</td>
                     <td style="color:blue">${debAmt > 0 ? debAmt : '-'}</td>
                     <td style="color:red">${creAmt > 0 ? creAmt : '-'}</td>
                     <td style="font-weight:bold; background:#f8fafc;">${runningBalance.toLocaleString()}</td>
