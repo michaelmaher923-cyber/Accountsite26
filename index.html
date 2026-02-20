@@ -2,116 +2,87 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام المحاسب المتكامل</title>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
         :root { --main: #1e293b; --accent: #0284c7; --bg: #f1f5f9; --white: #ffffff; --danger: #e11d48; --success: #10b981; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
-        header { background: var(--main); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
-        .page { display: none; padding: 20px; animation: fadeIn 0.3s; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
+        header { background: var(--main); color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .page { display: none; padding: 20px; }
         .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px; }
-        .card { background: var(--white); padding: 30px; border-radius: 15px; text-align: center; cursor: pointer; border: 1px solid #e2e8f0; transition: 0.3s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
-        .table-container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-x: auto; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
-        th { background: #f8fafc; padding: 12px; border: 1px solid #e2e8f0; color: var(--main); }
-        td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; }
-        input, select { width: 90%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; }
-        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-add { background: var(--main); color: white; }
-        .btn-save { background: var(--success); color: white; }
-        .btn-del { background: var(--danger); color: white; padding: 5px 10px; }
-        .auth-container { max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); text-align: center; }
-        #loader { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; justify-content:center; align-items:center; flex-direction:column; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 12px; text-align: center; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .table-container { background: white; padding: 15px; border-radius: 8px; overflow-x: auto; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; border: 1px solid #e2e8f0; text-align: center; }
+        input { width: 90%; padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; color: white; }
+        .btn-save { background: var(--success); }
+        .btn-del { background: var(--danger); }
+        .btn-nav { background: var(--main); margin-bottom: 10px; }
+        #loader { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; justify-content:center; align-items:center; flex-direction:column; }
+        .auth-box { max-width: 350px; margin: 80px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
     </style>
 </head>
 <body>
 
-<div id="loader">
-    <div style="width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
-    <p style="margin-top: 15px; font-weight: bold;">جاري معالجة البيانات...</p>
+<div id="loader"><h3>⏳ جاري الاتصال بالسحاب...</h3></div>
+
+<div id="authScreen" class="auth-box">
+    <h2>🔐 دخول النظام</h2>
+    <input type="text" id="username" placeholder="اسم المستخدم" style="margin-bottom:10px; width:100%; padding:10px;"><br>
+    <input type="password" id="password" placeholder="كلمة المرور" style="margin-bottom:20px; width:100%; padding:10px;"><br>
+    <button class="btn btn-save" style="width:100%" onclick="handleAuth(true)">تسجيل الدخول</button>
+    <p style="font-size:12px; color:gray; margin-top:15px;">أو <a href="#" onclick="handleAuth(false)">إنشاء حساب جديد</a></p>
 </div>
 
-<div id="authScreen" class="auth-container">
-    <h1 style="color: var(--main); margin-bottom: 30px;">🔐 دخول النظام</h1>
-    <input type="text" id="username" placeholder="اسم المستخدم" style="margin-bottom: 15px; padding: 12px; width: 100%; box-sizing: border-box;">
-    <input type="password" id="password" placeholder="كلمة المرور" style="margin-bottom: 25px; padding: 12px; width: 100%; box-sizing: border-box;">
-    <button class="btn btn-save" style="width: 100%; justify-content: center; padding: 15px;" onclick="handleLogin(true)">تسجيل الدخول</button>
-    <p style="margin-top: 20px; font-size: 14px; color: #64748b;">
-        إذا كنت مستخدم جديد: <a href="#" onclick="handleLogin(false)" style="color: var(--accent); text-decoration: none; font-weight: bold;">إنشاء حساب جديد</a>
-    </p>
-</div>
-
-<div id="appScreen" style="display: none;">
+<div id="appScreen" style="display:none;">
     <header>
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <span style="font-size: 24px;">📟</span>
-            <h2 style="margin: 0;">المحاسب الذكي</h2>
-        </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <span id="userTag" style="background: #334155; padding: 5px 12px; border-radius: 20px; font-size: 13px;"></span>
-            <button class="btn btn-save" onclick="syncData()">☁️ حفظ السحاب</button>
+        <h3 id="userDisplay">المحاسب الذكي</h3>
+        <div>
+            <button class="btn btn-save" onclick="syncData()">☁️ حفظ</button>
             <button class="btn btn-del" onclick="location.reload()">🚪 خروج</button>
         </div>
     </header>
 
     <div id="homePage" class="page active">
         <div class="card-grid">
-            <div class="card" onclick="showPage('journalPage')"><h3>📓 دفتر اليومية</h3><p>تسجيل القيود اليومية</p></div>
-            <div class="card" onclick="showPage('accountsPage')"><h3>📁 دليل الحسابات</h3><p>إدارة وتصنيف الحسابات</p></div>
-            <div class="card" onclick="showPage('inventoryPage')"><h3>📦 حركة المخزن</h3><p>متابعة الأصناف والكميات</p></div>
-            <div class="card" onclick="showPage('trialBalancePage')"><h3>⚖️ ميزان المراجعة</h3><p>توازن الأرصدة</p></div>
-            <div class="card" onclick="showPage('incomeStatementPage')"><h3>📉 قائمة الدخل</h3><p>الأرباح والخسائر</p></div>
-            <div class="card" onclick="showPage('balanceSheetPage')"><h3>🏦 المركز المالي</h3><p>الأصول والخصوم</p></div>
+            <div class="card" onclick="openPage('journalPage')"><h3>📓 اليومية</h3></div>
+            <div class="card" onclick="openPage('accountsPage')"><h3>📁 الحسابات</h3></div>
+            <div class="card" onclick="openPage('trialPage')"><h3>⚖️ الميزان</h3></div>
+            <div class="card" onclick="openPage('stockPage')"><h3>📦 المخزن</h3></div>
         </div>
     </div>
 
     <div id="journalPage" class="page">
-        <button class="btn btn-add" onclick="showPage('homePage')">🔙 رجوع</button>
+        <button class="btn btn-nav" onclick="openPage('homePage')">🔙 رجوع</button>
+        <button class="btn btn-save" onclick="addRow('j')">+ قيد جديد</button>
         <div class="table-container">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3>📓 القيود المحاسبية</h3>
-                <button class="btn btn-add" onclick="addRow('journal')">+ إضافة قيد</button>
-            </div>
-            <table id="journalTable">
-                <thead>
-                    <tr>
-                        <th>التاريخ</th><th>مدين</th><th>دائن</th><th>البيان/الاسم</th><th>المبلغ</th><th>الصنف</th><th>الكمية</th><th>إجراء</th>
-                    </tr>
-                </thead>
+            <table>
+                <thead><tr><th>التاريخ</th><th>مدين</th><th>دائن</th><th>البيان</th><th>المبلغ</th><th>الصنف</th><th>الكمية</th><th>حذف</th></tr></thead>
                 <tbody id="journalBody"></tbody>
             </table>
         </div>
     </div>
 
     <div id="accountsPage" class="page">
-        <button class="btn btn-add" onclick="showPage('homePage')">🔙 رجوع</button>
+        <button class="btn btn-nav" onclick="openPage('homePage')">🔙 رجوع</button>
+        <button class="btn btn-save" onclick="addRow('a')">+ حساب جديد</button>
         <div class="table-container">
-            <h3>📁 تعريف الحسابات</h3>
-            <button class="btn btn-add" onclick="addRow('accounts')">+ إضافة حساب</button>
-            <table id="accountsTable">
-                <thead><tr><th>اسم الحساب</th><th>التصنيف</th><th>إجراء</th></tr></thead>
-                <tbody id="accountsBody"></tbody>
-            </table>
+            <table><thead><tr><th>اسم الحساب</th><th>النوع</th><th>حذف</th></tr></thead><tbody id="accountsBody"></tbody></table>
         </div>
     </div>
 
-    <div id="inventoryPage" class="page"><button class="btn btn-add" onclick="showPage('homePage')">🔙 رجوع</button><div class="table-container" id="inventoryContent"></div></div>
-    <div id="trialBalancePage" class="page"><button class="btn btn-add" onclick="showPage('homePage')">🔙 رجوع</button><div class="table-container" id="trialContent"></div></div>
-    <div id="incomeStatementPage" class="page"><button class="btn btn-add" onclick="showPage('homePage')">🔙 رجوع</button><div class="table-container" id="incomeContent"></div></div>
-    <div id="balanceSheetPage" class="page"><button class="btn btn-add" onclick="showPage('homePage')">🔙 رجوع</button><div class="table-container" id="balanceContent"></div></div>
+    <div id="trialPage" class="page"><button class="btn btn-nav" onclick="openPage('homePage')">🔙 رجوع</button><div class="table-container" id="trialResult"></div></div>
+    <div id="stockPage" class="page"><button class="btn btn-nav" onclick="openPage('homePage')">🔙 رجوع</button><div class="table-container" id="stockResult"></div></div>
 </div>
 
-<datalist id="accountsList"></datalist>
+<datalist id="accList"></datalist>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-    const firebaseConfig = {
+    const config = {
         apiKey: "AIzaSyBP7HP1w4MbOFZWnv7BdpKwDlYjv4VJUTM",
         authDomain: "accountsite26.firebaseapp.com",
         databaseURL: "https://accountsite26-default-rtdb.firebaseio.com",
@@ -119,144 +90,121 @@
         appId: "1:1015795938039:web:b625e24fca2c5b231d19f2"
     };
 
-    const app = initializeApp(firebaseConfig);
+    const app = initializeApp(config);
     const db = getDatabase(app);
-
     let currentUser = "";
-    let dbData = { journal: [], accounts: [] };
+    let userDB = { journal: [], accounts: [] };
 
-    // --- نظام الدخول ---
-    window.handleLogin = async (isLogin) => {
+    window.handleAuth = async (isLogin) => {
         const u = document.getElementById('username').value.trim().toLowerCase();
         const p = document.getElementById('password').value.trim();
-        if(!u || !p) return alert("أدخل البيانات");
+        if(!u || !p) return alert("أكمل البيانات");
 
-        document.getElementById('loader').style.display = 'flex';
-        const userRef = ref(db, 'users/' + u);
-        const snap = await get(userRef);
-
-        if(isLogin) {
-            if(snap.exists() && snap.val().password === p) {
-                currentUser = u;
-                dbData = snap.val().data || { journal: [], accounts: [] };
-                loadApp();
-            } else alert("خطأ في الاسم أو كلمة المرور");
-        } else {
-            if(snap.exists()) alert("الاسم مستخدم بالفعل");
-            else {
-                await set(userRef, { password: p, data: dbData });
-                currentUser = u;
-                loadApp();
-            }
-        }
-        document.getElementById('loader').style.display = 'none';
-    };
-
-    function loadApp() {
-        document.getElementById('authScreen').style.display = 'none';
-        document.getElementById('appScreen').style.display = 'block';
-        document.getElementById('userTag').innerText = "مرحباً: " + currentUser;
-        updateDatalists();
-        renderJournal();
-        renderAccounts();
-    }
-
-    // --- وظائف التعديل ---
-    window.addRow = (type) => {
-        if(type === 'journal') dbData.journal.push({ date: new Date().toISOString().split('T')[0], deb: '', cre: '', note: '', amt: 0, item: '', qty: 0 });
-        else dbData.accounts.push({ name: '', type: 'أصول' });
-        type === 'journal' ? renderJournal() : renderAccounts();
-    };
-
-    window.delRow = (type, index) => {
-        dbData[type].splice(index, 1);
-        type === 'journal' ? renderJournal() : renderAccounts();
-    };
-
-    // --- عرض البيانات (Rendering) ---
-    function renderJournal() {
-        const body = document.getElementById('journalBody');
-        body.innerHTML = '';
-        dbData.journal.forEach((row, i) => {
-            body.innerHTML += `<tr>
-                <td><input type="date" value="${row.date}" onchange="dbData.journal[${i}].date=this.value"></td>
-                <td><input list="accountsList" value="${row.deb}" onchange="dbData.journal[${i}].deb=this.value"></td>
-                <td><input list="accountsList" value="${row.cre}" onchange="dbData.journal[${i}].cre=this.value"></td>
-                <td><input value="${row.note||''}" onchange="dbData.journal[${i}].note=this.value"></td>
-                <td><input type="number" value="${row.amt}" onchange="dbData.journal[${i}].amt=Number(this.value)"></td>
-                <td><input value="${row.item||''}" onchange="dbData.journal[${i}].item=this.value"></td>
-                <td><input type="number" value="${row.qty||0}" onchange="dbData.journal[${i}].qty=Number(this.value)"></td>
-                <td><button class="btn-del" onclick="delRow('journal', ${i})">🗑️</button></td>
-            </tr>`;
-        });
-    }
-
-    function renderAccounts() {
-        const body = document.getElementById('accountsBody');
-        body.innerHTML = '';
-        const types = ['أصول', 'خصوم', 'حقوق ملكية', 'إيرادات', 'مصروفات'];
-        dbData.accounts.forEach((acc, i) => {
-            body.innerHTML += `<tr>
-                <td><input value="${acc.name}" onchange="dbData.accounts[${i}].name=this.value; updateDatalists()"></td>
-                <td><select onchange="dbData.accounts[${i}].type=this.value">${types.map(t=>`<option ${acc.type==t?'selected':''}>${t}</option>`).join('')}</select></td>
-                <td><button class="btn-del" onclick="delRow('accounts', ${i})">🗑️</button></td>
-            </tr>`;
-        });
-        updateDatalists();
-    }
-
-    function updateDatalists() {
-        const list = document.getElementById('accountsList');
-        list.innerHTML = dbData.accounts.map(a => `<option value="${a.name}">`).join('');
-    }
-
-    // --- الحفظ السحابي ---
-    window.syncData = async () => {
         document.getElementById('loader').style.display = 'flex';
         try {
-            await set(ref(db, `users/${currentUser}/data`), dbData);
-            alert("✅ تم مزامنة كافة البيانات بنجاح");
-        } catch (e) { alert("فشل في الحفظ"); }
+            const userRef = ref(db, 'users/' + u);
+            const snap = await get(userRef);
+
+            if(isLogin) {
+                if(snap.exists() && snap.val().password === p) {
+                    currentUser = u;
+                    userDB = snap.val().data || { journal:[], accounts:[] };
+                    startApp();
+                } else alert("خطأ في البيانات");
+            } else {
+                if(snap.exists()) alert("الاسم مستخدم");
+                else {
+                    await set(userRef, { password: p, data: { journal:[], accounts:[] } });
+                    currentUser = u;
+                    userDB = { journal:[], accounts:[] };
+                    startApp();
+                }
+            }
+        } catch(e) { alert("خطأ في الاتصال"); }
         document.getElementById('loader').style.display = 'none';
     };
 
-    // --- نظام التنقل والتقارير ---
-    window.showPage = (id) => {
+    function startApp() {
+        document.getElementById('authScreen').style.display = 'none';
+        document.getElementById('appScreen').style.display = 'block';
+        document.getElementById('userDisplay').innerText = "👤 " + currentUser;
+        renderAll();
+    }
+
+    window.openPage = (id) => {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        if(id === 'inventoryPage') generateInventory();
-        if(id === 'trialBalancePage') generateTrial();
-        // تضاف وظائف التقارير الأخرى بنفس المنطق
+        if(id === 'trialPage') renderTrial();
+        if(id === 'stockPage') renderStock();
     };
 
-    function generateInventory() {
-        const inv = {};
-        dbData.journal.forEach(j => {
-            if(j.item) {
-                if(!inv[j.item]) inv[j.item] = 0;
-                // منطق مبسط: زيادة إذا كان مدين (مشتريات) ونقص إذا كان دائن (مبيعات)
-                inv[j.item] += Number(j.qty || 0);
-            }
+    window.addRow = (type) => {
+        if(type === 'j') userDB.journal.push({ d: new Date().toISOString().split('T')[0], deb: '', cre: '', n: '', v: 0, p: '', q: 0 });
+        else userDB.accounts.push({ n: '', t: 'أصول' });
+        renderAll();
+    };
+
+    window.delRow = (type, i) => {
+        if(type === 'j') userDB.journal.splice(i, 1);
+        else userDB.accounts.splice(i, 1);
+        renderAll();
+    };
+
+    function renderAll() {
+        const jb = document.getElementById('journalBody'); jb.innerHTML = '';
+        userDB.journal.forEach((r, i) => {
+            jb.innerHTML += `<tr>
+                <td><input type="date" value="${r.d}" onchange="userDB.journal[${i}].d=this.value"></td>
+                <td><input list="accList" value="${r.deb}" onchange="userDB.journal[${i}].deb=this.value"></td>
+                <td><input list="accList" value="${r.cre}" onchange="userDB.journal[${i}].cre=this.value"></td>
+                <td><input value="${r.n}" onchange="userDB.journal[${i}].n=this.value"></td>
+                <td><input type="number" value="${r.v}" onchange="userDB.journal[${i}].v=Number(this.value)"></td>
+                <td><input value="${r.p}" onchange="userDB.journal[${i}].p=this.value"></td>
+                <td><input type="number" value="${r.q}" onchange="userDB.journal[${i}].q=Number(this.value)"></td>
+                <td><button class="btn-del" onclick="delRow('j',${i})">X</button></td>
+            </tr>`;
         });
-        let html = `<h3>📦 رصيد المخزن الحالي</h3><table><tr><th>الصنف</th><th>الكمية المتوفرة</th></tr>`;
-        for(let item in inv) html += `<tr><td>${item}</td><td>${inv[item]}</td></tr>`;
-        document.getElementById('inventoryContent').innerHTML = html + `</table>`;
+
+        const ab = document.getElementById('accountsBody'); ab.innerHTML = '';
+        userDB.accounts.forEach((a, i) => {
+            ab.innerHTML += `<tr>
+                <td><input value="${a.n}" onchange="userDB.accounts[${i}].n=this.value; updateList()"></td>
+                <td><select onchange="userDB.accounts[${i}].t=this.value">${['أصول','خصوم','إيراد','مصروف'].map(t=>`<option ${a.t==t?'selected':''}>${t}</option>`).join('')}</select></td>
+                <td><button class="btn-del" onclick="delRow('a',${i})">X</button></td>
+            </tr>`;
+        });
+        updateList();
     }
 
-    function generateTrial() {
-        const balances = {};
-        dbData.journal.forEach(j => {
-            if(j.deb) balances[j.deb] = (balances[j.deb] || 0) + Number(j.amt);
-            if(j.cre) balances[j.cre] = (balances[j.cre] || 0) - Number(j.amt);
-        });
-        let html = `<h3>⚖️ ميزان المراجعة بالأرصدة</h3><table><tr><th>الحساب</th><th>مدين</th><th>دائن</th></tr>`;
-        for(let acc in balances) {
-            const b = balances[acc];
-            html += `<tr><td>${acc}</td><td>${b>0?b:0}</td><td>${b<0?Math.abs(b):0}</td></tr>`;
-        }
-        document.getElementById('trialContent').innerHTML = html + `</table>`;
+    function updateList() {
+        document.getElementById('accList').innerHTML = userDB.accounts.map(a => `<option value="${a.n}">`).join('');
     }
 
+    window.syncData = async () => {
+        document.getElementById('loader').style.display = 'flex';
+        await set(ref(db, `users/${currentUser}/data`), userDB);
+        document.getElementById('loader').style.display = 'none';
+        alert("✅ تم الحفظ");
+    };
+
+    function renderTrial() {
+        const bal = {};
+        userDB.journal.forEach(j => {
+            if(j.deb) bal[j.deb] = (bal[j.deb] || 0) + j.v;
+            if(j.cre) bal[j.cre] = (bal[j.cre] || 0) - j.v;
+        });
+        let h = '<h3>⚖️ ميزان المراجعة</h3><table><tr><th>الحساب</th><th>مدين</th><th>دائن</th></tr>';
+        for(let a in bal) h += `<tr><td>${a}</td><td>${bal[a]>0?bal[a]:0}</td><td>${bal[a]<0?Math.abs(bal[a]):0}</td></tr>`;
+        document.getElementById('trialResult').innerHTML = h + '</table>';
+    }
+
+    function renderStock() {
+        const st = {};
+        userDB.journal.forEach(j => { if(j.p) st[j.p] = (st[j.p] || 0) + j.q; });
+        let h = '<h3>📦 رصيد الأصناف</h3><table><tr><th>الصنف</th><th>الكمية</th></tr>';
+        for(let p in st) h += `<tr><td>${p}</td><td>${st[p]}</td></tr>`;
+        document.getElementById('stockResult').innerHTML = h + '</table>';
+    }
 </script>
 </body>
 </html>
